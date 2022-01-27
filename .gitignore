@@ -1,0 +1,5 @@
+client/src/environment/
+*.DS_Store
+client/node_modules/
+client/package-lock.json
+Documents/
