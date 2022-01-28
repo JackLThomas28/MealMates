@@ -5,7 +5,7 @@ import (
 )
 
 /* ************ Private Methods ************* */
-func getAttribute(n *html.Node, key string) (string, bool){
+func getAttribute(n *html.Node, key string) (string, bool) {
 	for _, attr := range n.Attr {
 		if attr.Key == key {
 			return attr.Val, true

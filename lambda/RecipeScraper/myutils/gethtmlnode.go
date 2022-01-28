@@ -3,14 +3,13 @@ package myutils
 import (
 	"golang.org/x/net/html"
 	"io/ioutil"
-	"strings"
 	"log"
 	"net/http"
+	"strings"
 )
 
-
 /* ************ Public Methods ************* */
-func GetHtmlNode(URL string) *html.Node{
+func GetHtmlNode(URL string) *html.Node {
 	// Send GET request for URL
 	resp, err := http.Get(URL)
 	if err != nil {
@@ -19,7 +18,7 @@ func GetHtmlNode(URL string) *html.Node{
 	// Read the response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-	log.Fatalln(err)
+		log.Fatalln(err)
 	}
 	// Convert the body to type string
 	sb := string(body)
@@ -31,4 +30,3 @@ func GetHtmlNode(URL string) *html.Node{
 
 	return node
 }
-
