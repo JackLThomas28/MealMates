@@ -59,10 +59,12 @@ func getUnitsMap() map[string]string {
 	}
 }
 
-func getFoodContainers() [2]string {
-	return [2]string{
+func getFoodContainers() [4]string {
+	return [4]string{
 		"jar",
 		"can",
+		"package",
+		"container",
 	}
 }
 
