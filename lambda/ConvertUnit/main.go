@@ -1,17 +1,17 @@
 package main
 
 import (
-        "context"
-        "github.com/aws/aws-lambda-go/lambda"
+	"context"
+	"github.com/aws/aws-lambda-go/lambda"
 
-        // Local packages
-		"mealmates.com/lambda/ConvertUnit/Converter"
+	// Local packages
+	"mealmates.com/lambda/ConvertUnit/Converter"
 )
 
 type MyEvent struct {
 	Amount float64 `json:"amount"`
-	To string `json:"to"`
-	From string `json:"from"`
+	To     string  `json:"to"`
+	From   string  `json:"from"`
 }
 
 type MyResponse struct {
@@ -24,7 +24,7 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 }
 
 func main() {
-    lambda.Start(HandleRequest)
+	lambda.Start(HandleRequest)
 
 	// result, err := converter.Convert(2).From("teaspoons").To("tablespoon")
 	// if err != nil {
@@ -42,7 +42,7 @@ func main() {
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
-	// fmt.Println(result, "kilograms")	
+	// fmt.Println(result, "kilograms")
 }
 
 // BUILD COMMAND:

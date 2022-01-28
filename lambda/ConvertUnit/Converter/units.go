@@ -1,8 +1,7 @@
 package converter
 
-
 import (
-	// "errors"
+// "errors"
 )
 
 func getVolumeUnits() [11]string {
@@ -23,22 +22,22 @@ func getVolumeUnits() [11]string {
 func GetConvRate() map[string]float64 {
 	return map[string]float64{
 		// Volume Units based on liters
-		"teaspoon":0.004928931739603077,
-		"tablespoon":0.014786800000070619843,
-		"fluid ounce":0.029573600000141239685,
-		"gill":0.12,
-		"cup":0.24,
-		"pint":0.473176,
-		"quart":0.946353,
-		"gallon":3.78541,
-		"milliliter":0.001,
-		"liter":1,
+		"teaspoon":    0.004928931739603077,
+		"tablespoon":  0.014786800000070619843,
+		"fluid ounce": 0.029573600000141239685,
+		"gill":        0.12,
+		"cup":         0.24,
+		"pint":        0.473176,
+		"quart":       0.946353,
+		"gallon":      3.78541,
+		"milliliter":  0.001,
+		"liter":       1,
 		// Mass Units based on grams
-		"pound":453.592,
-		"ounce":28.3495,
-		"milligram":0.001,
-		"gram":1,
-		"kilogram":1000,
+		"pound":     453.592,
+		"ounce":     28.3495,
+		"milligram": 0.001,
+		"gram":      1,
+		"kilogram":  1000,
 	}
 }
 
@@ -65,6 +64,7 @@ type VolumeUnit struct {
 type MassUnit struct {
 	unit string
 }
+
 func (VolumeUnit) getUnitType() string {
 	return "VOLUME"
 }
@@ -105,4 +105,4 @@ func isMassUnit(unit string) bool {
 		}
 	}
 	return false
-} 
+}

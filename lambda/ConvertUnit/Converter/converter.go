@@ -7,15 +7,15 @@ import (
 )
 
 type Source struct {
-	val float64
+	val  float64
 	unit Unit
 }
 
 type Destination struct {
-	val float64
-	unit Unit
+	val    float64
+	unit   Unit
 	source Source
-	err error
+	err    error
 }
 
 func Convert(val float64) Source {
@@ -24,7 +24,7 @@ func Convert(val float64) Source {
 	return src
 }
 
-func (s Source) From(unitId string) (Destination) {
+func (s Source) From(unitId string) Destination {
 	var dest Destination
 
 	if isVolumeUnit(unitId) {
@@ -37,9 +37,9 @@ func (s Source) From(unitId string) (Destination) {
 
 	if dest.err == nil {
 		s.unit.setUnit(unitId)
-	
+
 		dest = Destination{val: s.val, source: s}
-	}	
+	}
 	return dest
 }
 
