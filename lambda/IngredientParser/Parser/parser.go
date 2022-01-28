@@ -5,68 +5,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	globals "mealmates.com/lambda/IngredientParser/Globals"
 )
-
-func getUnitsMap() map[string]string {
-	return map[string]string {
-		// Volume Units
-		"teaspoon":"teaspoon",
-		"tsp":"teaspoon",
-		"t":"teaspoon",
-		"tablespoon":"tablespoon",
-		"T":"tablespoon",
-		"tbs":"tablespoon",
-		"tbsp":"tablespoon",
-		"fluid ounce":"fluid ounce",
-		"fl oz":"fluid ounce",
-		"gill":"gill",
-		"cup":"cup",
-		"c":"cup",
-		"pint":"pint",
-		"p":"pint",
-		"pt":"pint",
-		"fl pt":"pint",
-		"quart":"quart",
-		"q":"quart",
-		"qt":"quart",
-		"fl qt":"quart",
-		"gallon":"gallon",
-		"gal":"gallon",
-		"milliliter":"milliliter", 
-		"mL":"milliliter",
-		"ml":"milliliter",
-		"cc":"milliliter",
-		"liter":"liter",
-		"L":"liter",
-		"l":"liter",
-		"litre":"liter",
-		"deciliter":"deciliter",
-		"dL":"deciliter",
-		"dl":"deciliter",
-		"decilitre":"deciliter",
-		// Mass Units
-		"pound":"pound", 
-		"lb":"pound", 
-		"#":"pound",
-		"ounce":"ounce", 
-		"oz":"ounce",
-		"milligram":"milligram", 
-		"mg":"milligram",
-		"gram":"gram", 
-		"g":"gram",
-		"kilogram":"kilogram", 
-		"kg":"kilogram",
-	}
-}
-
-func getFoodContainers() [4]string {
-	return [4]string{
-		"jar",
-		"can",
-		"package",
-		"container",
-	}
-}
 
 const RE_AMT_PATTERN = "[0-9¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.]+"
 const RE_PAR_PATTERN = "[()]"
@@ -85,51 +26,18 @@ func printIngredient(i Ingredient) {
 	fmt.Println("-------------------")
 }
 
-func convertStringToFloat(strAmount string) float64 {
-	if strAmount == "¼" {
-		return 0.25
-	} else if strAmount == "½" {
-		return 0.5
-	} else if strAmount == "¾" {
-		return 0.75
-	} else if strAmount == "⅐" {
-		return 0.142857142857143
-	} else if strAmount == "⅑" {
-		return 0.111111111111111
-	} else if strAmount == "⅒" {
-		return 0.1
-	} else if strAmount == "⅓" {
-		return 0.333333333333333
-	} else if strAmount == "⅔" {
-		return 0.666666666666667
-	} else if strAmount == "⅕" {
-		return 0.2
-	} else if strAmount == "⅖" {
-		return 0.4
-	} else if strAmount == "⅗" {
-		return 0.6
-	} else if strAmount == "⅘" {
-		return 0.8
-	} else if strAmount == "⅙" {
-		return 0.166666666666667
-	} else if strAmount == "⅚" {
-		return 0.833333333333333
-	} else if strAmount == "⅛" {
-		return 0.125
-	} else if strAmount == "⅜" {
-		return 0.375
-	} else if strAmount == "⅝" {
-		return 0.625
-	} else if strAmount == "⅞" {
-		return 0.875
-	} else {
-		amt, err := strconv.ParseFloat(strAmount, 64)
-		if err != nil {
-			fmt.Println("Error ParseFloat:", err)
-			return 0
-		}
-		return amt
+func convertStringToFloat(strAmount string) (float64, error) {
+	var err error = nil
+
+	fracToDecMap := globals.GetFracsInDecs()
+	amt, found := fracToDecMap[strAmount]
+
+	// Try to parse a decimal num if not a fraction
+	if !found {
+		amt, err = strconv.ParseFloat(strAmount, 64)
 	}
+
+	return amt, err
 }
 
 func calculateAmount(rawIngredient string) (float64, error) {
@@ -146,7 +54,12 @@ func calculateAmount(rawIngredient string) (float64, error) {
 		// Get the slice containing the string num
 		strAmount := amount[resultAmt[i][0]:resultAmt[i][1]]
 		// Convert from string to float
-		amt = amt + convertStringToFloat(strAmount)
+		flt, err := convertStringToFloat(strAmount)
+		if err != nil {
+			return 0, err
+		}
+
+		amt = amt + flt
 	}
 
 	// Find any parentheses
@@ -168,7 +81,6 @@ func calculateAmount(rawIngredient string) (float64, error) {
 			parAmt, err := strconv.ParseFloat(splitParText[0], 64)
 			if err != nil {
 				return parAmt, err
-				// parAmt = 1
 			}
 			amt = amt * parAmt
 		}
@@ -180,7 +92,7 @@ func calculateAmount(rawIngredient string) (float64, error) {
 }
 
 func getUnit(rawIngredient string) (string, error) {
-	for word, unit := range getUnitsMap() {
+	for word, unit := range globals.GetUnitsMap() {
 		// Find the unit. May be plural
 		// Ex: pounds
 		re, _ := regexp.Compile(`(\b` + word + `)(s\b|\b)`)
@@ -207,7 +119,7 @@ func determineName(rawIngredient string) (string, error) {
 	}
 
 	unitFound := false
-	for word, _ := range getUnitsMap() {
+	for word, _ := range globals.GetUnitsMap() {
 		re, _ = regexp.Compile(`(\b` + word + `)(s\b|\b)`)
 		units := re.FindAllIndex([]byte(name), 1)
 
@@ -239,7 +151,7 @@ func determineName(rawIngredient string) (string, error) {
 	}
 
 	// Remove any food containers
-	for _, container := range getFoodContainers() {
+	for _, container := range globals.GetFoodContainers() {
 		re, _ = regexp.Compile(`(\b` + container + `)(s\b|\b)`)
 		containers := re.FindAllIndex([]byte(name), -1)
 
