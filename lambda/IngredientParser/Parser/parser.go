@@ -2,9 +2,9 @@ package parser
 
 import (
 	"fmt"
-	"strings"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func getUnitsMap() map[string]string {
@@ -208,7 +208,7 @@ func determineName(rawIngredient string) string {
 	return name
 }
 
-func ParseIngredients(ingredients []string) {
+func ParseIngredients(ingredients []string) []Ingredient {
 	// 1. Store ingredients in Ingredient objects
 	var ingredientList []Ingredient
 	for i := 0; i < len(ingredients); i++ {
@@ -227,6 +227,8 @@ func ParseIngredients(ingredients []string) {
 		// 4. Set the name
 		ingredientList[i].Name = determineName(ingredientList[i].Raw)
 
-		printIngredient(ingredientList[i])
+		// printIngredient(ingredientList[i])
 	}
+
+	return ingredientList
 }
