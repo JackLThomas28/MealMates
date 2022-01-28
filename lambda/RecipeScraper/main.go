@@ -13,20 +13,24 @@ type MyEvent struct {
 	URL string `json:"url"`
 }
 
-func HandleRequest(ctx context.Context, request MyEvent) (standard.RecipeJSON, error) {
+type MyResponse struct {
+	Recipe standard.RecipeJSON `json:"recipe"`
+}
+
+func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 	// Currently only scraping "allrecipes.com" recipes
 	allrecipesRecipe, err := allrecipes.GetRecipe(request.URL)
 	if err != nil {
-		return standard.RecipeJSON{}, err
+		return MyResponse{}, err
 	}
 
 	// Only save the information needed by standardizing the recipe
 	standardRecipe, err := standard.StandardizeRecipe(allrecipesRecipe)
 	if err != nil {
-		return standard.RecipeJSON{}, err
+		return MyResponse{}, err
 	}
 
-	return standardRecipe, nil
+	return MyResponse{Recipe: standardRecipe}, nil
 }
 
 func main() {
