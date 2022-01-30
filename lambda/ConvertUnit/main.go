@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/aws/aws-lambda-go/lambda"
+
+	lambda "github.com/aws/aws-lambda-go/lambda"
 
 	// Local packages
-	"mealmates.com/lambda/ConvertUnit/Converter"
+	converter "mealmates.com/lambda/ConvertUnit/Converter"
 )
 
 type MyEvent struct {

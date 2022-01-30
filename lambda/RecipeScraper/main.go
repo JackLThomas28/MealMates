@@ -24,7 +24,7 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 		return MyResponse{}, err
 	}
 
-	// Only save the information needed by standardizing the recipe
+	// Only save the information needed from the recipe
 	standardRecipe, err := standard.StandardizeRecipe(allrecipesRecipe)
 	if err != nil {
 		return MyResponse{}, err

@@ -13,10 +13,10 @@ const RE_AMT_PATTERN = "[0-9¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.
 const RE_PAR_PATTERN = "[()]"
 
 type Ingredient struct {
-	Name string
-	Amount float64
-	Unit string
-	Raw string
+	Name string `json:"name"`
+	Amount float64 `json:"amount"`
+	Unit string `json:"unit"`
+	Raw string `json:"raw"`
 }
 
 func printIngredient(i Ingredient) {

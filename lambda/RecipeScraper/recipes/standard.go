@@ -7,34 +7,34 @@ import (
 )
 
 type ImageJSON struct {
-	URL    string `json:"URL"`
-	Width  int    `json:"Width"`
-	Height int    `json:"Height"`
+	URL    string `json:"url"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
 }
 
 type RatingJSON struct {
-	RatingValue float32 `json:"RatingValue"`
-	RatingCount int     `json:"RatingCount"`
+	RatingValue float32 `json:"ratingValue"`
+	RatingCount int     `json:"ratingCount"`
 }
 
 type NutritionJSON struct {
-	Calories string `json:"Calories"`
+	Calories string `json:"calories"`
 }
 
 type RecipeJSON struct {
-	ID           int           `json:"ID"`
-	Name         string        `json:"Name"`
-	Image        ImageJSON     `json:"Image"`
-	Description  string        `json:"Description"`
-	PrepTime     string        `json:"PrepTime"`
-	CookTime     string        `json:"CookTime"`
-	TotalTime    string        `json:"TotalTime"`
-	RecipeYield  string        `json:"RecipeYield"`
-	Ingredients  []string      `json:"Ingredients"`
-	Instructions []string      `json:"Instructions"`
-	Categories   []string      `json:"Categories"`
-	Rating       RatingJSON    `json:"Rating"`
-	Nutrition    NutritionJSON `json:"Nutrition"`
+	ID           int           `json:"id"`
+	Name         string        `json:"name"`
+	Image        ImageJSON     `json:"image"`
+	Description  string        `json:"description"`
+	PrepTime     string        `json:"prepTime"`
+	CookTime     string        `json:"cookTime"`
+	TotalTime    string        `json:"totalTime"`
+	RecipeYield  string        `json:"recipeYield"`
+	Ingredients  []string      `json:"ingredients"`
+	Instructions []string      `json:"instructions"`
+	Categories   []string      `json:"categories"`
+	Rating       RatingJSON    `json:"rating"`
+	Nutrition    NutritionJSON `json:"nutrition"`
 }
 
 func StandardizeRecipe(recipe allrecipes.Recipe) (RecipeJSON, error) {
