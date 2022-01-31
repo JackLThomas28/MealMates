@@ -7,6 +7,7 @@ import (
 	// Local packages
 	"mealmates.com/lambda/RecipeScraper/recipes"
 	"mealmates.com/lambda/RecipeScraper/recipes/allrecipes"
+	structs "mealmates.com/lambda/RecipeScraper/structs"
 )
 
 type MyEvent struct {
@@ -14,7 +15,7 @@ type MyEvent struct {
 }
 
 type MyResponse struct {
-	Recipe standard.RecipeJSON `json:"recipe"`
+	Recipe structs.StandardRecipe `json:"recipe"`
 }
 
 func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {

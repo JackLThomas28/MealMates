@@ -1,49 +1,20 @@
 package standard
 
 import (
-	"mealmates.com/lambda/RecipeScraper/recipes/allrecipes"
 	// "encoding/json"
 	// "errors"
+
+	// Local Packages
+	structs "mealmates.com/lambda/RecipeScraper/structs"
 )
 
-type ImageJSON struct {
-	URL    string `json:"url"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-}
-
-type RatingJSON struct {
-	RatingValue float32 `json:"ratingValue"`
-	RatingCount int     `json:"ratingCount"`
-}
-
-type NutritionJSON struct {
-	Calories string `json:"calories"`
-}
-
-type RecipeJSON struct {
-	ID           int           `json:"id"`
-	Name         string        `json:"name"`
-	Image        ImageJSON     `json:"image"`
-	Description  string        `json:"description"`
-	PrepTime     string        `json:"prepTime"`
-	CookTime     string        `json:"cookTime"`
-	TotalTime    string        `json:"totalTime"`
-	RecipeYield  string        `json:"recipeYield"`
-	Ingredients  []string      `json:"ingredients"`
-	Instructions []string      `json:"instructions"`
-	Categories   []string      `json:"categories"`
-	Rating       RatingJSON    `json:"rating"`
-	Nutrition    NutritionJSON `json:"nutrition"`
-}
-
-func StandardizeRecipe(recipe allrecipes.Recipe) (RecipeJSON, error) {
+func StandardizeRecipe(recipe structs.ARRecipe) (structs.StandardRecipe, error) {
 	// Build the recipe
-	var newRecipe RecipeJSON
+	var newRecipe structs.StandardRecipe
 	newRecipe.ID = recipe.ID
 	newRecipe.Name = recipe.Name
 
-	var newImage ImageJSON
+	var newImage structs.StandardImage
 	newImage.URL = recipe.Image.URL
 	newImage.Width = recipe.Image.Width
 	newImage.Height = recipe.Image.Height
@@ -64,13 +35,13 @@ func StandardizeRecipe(recipe allrecipes.Recipe) (RecipeJSON, error) {
 		newRecipe.Categories = append(newRecipe.Categories, recipe.RecipeCategory[i])
 	}
 
-	var newRating RatingJSON
+	var newRating structs.StandardRating
 	newRating.RatingValue = recipe.AggregateRating.RatingValue
 	newRating.RatingCount = recipe.AggregateRating.RatingCount
 
 	newRecipe.Rating = newRating
 
-	var newNutrition NutritionJSON
+	var newNutrition structs.StandardNutrition
 	newNutrition.Calories = recipe.Nutrition.Calories
 	newRecipe.Nutrition = newNutrition
 

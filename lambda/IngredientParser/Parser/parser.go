@@ -6,20 +6,14 @@ import (
 	"strconv"
 	"strings"
 
-	globals "mealmates.com/lambda/IngredientParser/Globals"
+	constants "mealmates.com/lambda/IngredientParser/constants"
+	structs "mealmates.com/lambda/IngredientParser/structs"
 )
 
 const RE_AMT_PATTERN = "[0-9¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.]+"
 const RE_PAR_PATTERN = "[()]"
 
-type Ingredient struct {
-	Name string `json:"name"`
-	Amount float64 `json:"amount"`
-	Unit string `json:"unit"`
-	Raw string `json:"raw"`
-}
-
-func printIngredient(i Ingredient) {
+func printIngredient(i structs.Ingredient) {
 	fmt.Println("Name:  ", i.Name)
 	fmt.Println("Amount:", i.Amount)
 	fmt.Println("Unit:  ", i.Unit)
@@ -29,7 +23,7 @@ func printIngredient(i Ingredient) {
 func convertStringToFloat(strAmount string) (float64, error) {
 	var err error = nil
 
-	fracToDecMap := globals.GetFracsInDecs()
+	fracToDecMap := constants.GetFracsInDecs()
 	amt, found := fracToDecMap[strAmount]
 
 	// Try to parse a decimal num if not a fraction
@@ -92,7 +86,7 @@ func calculateAmount(rawIngredient string) (float64, error) {
 }
 
 func getUnit(rawIngredient string) (string, error) {
-	for word, unit := range globals.GetUnitsMap() {
+	for word, unit := range constants.GetUnitsMap() {
 		// Find the unit. May be plural
 		// Ex: pounds
 		re, _ := regexp.Compile(`(\b` + word + `)(s\b|\b)`)
@@ -119,7 +113,7 @@ func determineName(rawIngredient string) (string, error) {
 	}
 
 	unitFound := false
-	for word, _ := range globals.GetUnitsMap() {
+	for word, _ := range constants.GetUnitsMap() {
 		re, _ = regexp.Compile(`(\b` + word + `)(s\b|\b)`)
 		units := re.FindAllIndex([]byte(name), 1)
 
@@ -151,7 +145,7 @@ func determineName(rawIngredient string) (string, error) {
 	}
 
 	// Remove any food containers
-	for _, container := range globals.GetFoodContainers() {
+	for _, container := range constants.GetFoodContainers() {
 		re, _ = regexp.Compile(`(\b` + container + `)(s\b|\b)`)
 		containers := re.FindAllIndex([]byte(name), -1)
 
@@ -166,11 +160,11 @@ func determineName(rawIngredient string) (string, error) {
 	return name, nil
 }
 
-func ParseIngredients(ingredients []string) ([]Ingredient, error) {
+func ParseIngredients(ingredients []string) ([]structs.Ingredient, error) {
 	// 1. Store ingredients in Ingredient objects
-	var ingredientList []Ingredient
+	var ingredientList []structs.Ingredient
 	for i := 0; i < len(ingredients); i++ {
-		curIngr := Ingredient{
+		curIngr := structs.Ingredient{
 			Raw: ingredients[i],
 		}
 		ingredientList = append(ingredientList, curIngr)

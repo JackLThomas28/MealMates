@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 
-	// Local Packages
+	// Third Party
 	"github.com/aws/aws-lambda-go/lambda"
-	parser "mealmates.com/lambda/IngredientParser/Parser"
+
+	// Local Packages
+	parser "mealmates.com/lambda/IngredientParser/parser"
+	structs "mealmates.com/lambda/IngredientParser/structs"
 )
 
 type MyEvent struct {
@@ -13,7 +16,7 @@ type MyEvent struct {
 }
 
 type MyResponse struct {
-	Ingredients []parser.Ingredient `json:"ingredients"`
+	Ingredients []structs.Ingredient `json:"ingredients"`
 }
 
 func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
