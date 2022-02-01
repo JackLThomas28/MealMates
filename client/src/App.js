@@ -10,7 +10,7 @@ import { useState } from "react";
 /* ***************** */
 
 function App() {
-  const [meals, setMeals] = useState([]);
+  const [meals, setMeals] = useState(recipes);
 
   const searchHandler = (recipe) => {
     setMeals((prevRecipes) => {

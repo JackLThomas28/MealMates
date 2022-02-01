@@ -36,7 +36,7 @@ const SearchForm = (props) => {
     lambda.invoke(params, (err, data) => {
       if (err) console.log("Error", err, err.stack);
       else {
-        props.onSearch(JSON.parse(data.Payload));
+        props.onSearch(JSON.parse(data.Payload).recipe);
       }
     });
 

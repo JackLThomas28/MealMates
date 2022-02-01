@@ -11,14 +11,14 @@ const RecipeList = (props) => {
     <ul className="recipe-list">
       {props.items.map((recipe) => (
         <Recipe
-          key={recipe.ID}
-          name={recipe.Name}
-          imgSrc={recipe.Image.URL}
-          imgHeight={recipe.Image.Height}
-          imgWidth={recipe.Image.Width}
-          description={recipe.Description}
-          servings={recipe.RecipeYield}
-          ingredients={recipe.Ingredients}
+          key={recipe.id}
+          name={recipe.name}
+          imgSrc={recipe.image.url}
+          imgHeight={recipe.image.height}
+          imgWidth={recipe.image.width}
+          description={recipe.description}
+          servings={recipe.recipeYield}
+          ingredients={recipe.ingredients}
         />
       ))}
     </ul>

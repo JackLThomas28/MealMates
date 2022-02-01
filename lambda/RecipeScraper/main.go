@@ -5,8 +5,8 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 
 	// Local packages
-	"mealmates.com/lambda/RecipeScraper/recipes"
-	"mealmates.com/lambda/RecipeScraper/recipes/allrecipes"
+	recipes "mealmates.com/lambda/RecipeScraper/recipes"
+	allrecipes "mealmates.com/lambda/RecipeScraper/recipes/allrecipes"
 	structs "mealmates.com/lambda/RecipeScraper/structs"
 )
 
@@ -26,7 +26,7 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 	}
 
 	// Only save the information needed from the recipe
-	standardRecipe, err := standard.StandardizeRecipe(allrecipesRecipe)
+	standardRecipe, err := recipes.StandardizeRecipe(allrecipesRecipe)
 	if err != nil {
 		return MyResponse{}, err
 	}
