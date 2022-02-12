@@ -26,7 +26,7 @@ type MyResponse struct {
 
 func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 	if request.Operation == "put" {
-		ops.Put(ops.PutItem{Recipe: request.Recipe, Ingredients: request.Ingredients}, request.Table)
+		ops.Put(ops.PutItem{Recipe: request.Recipe, Ingredients: request.Ingredients}, request.Table, request.BeginningIndex)
 		return MyResponse{}, nil
 	}
 	return MyResponse{}, errors.New("Unrecognized operation: " + request.Operation)

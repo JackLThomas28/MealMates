@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 
+	// Third Party
 	lambda "github.com/aws/aws-lambda-go/lambda"
 
-	// Local packages
-	converter "mealmates.com/lambda/ConvertUnit/Converter"
+	convert "mealmates.com/lambda/ConvertUnit/Convert"
 )
 
 type MyEvent struct {
@@ -20,7 +20,7 @@ type MyResponse struct {
 }
 
 func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
-	result, err := converter.Convert(request.Amount).From(request.From).To(request.To)
+	result, err := convert.Convert(request.Amount).From(request.From).To(request.To)
 	return MyResponse{Result: result}, err
 }
 

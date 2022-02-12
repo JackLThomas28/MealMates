@@ -88,12 +88,15 @@ func buildRecipesPutRequestItem(recipe structs.Recipe) map[string][]types.WriteR
 	}
 }
 
-func buildIngredientListRequestItem(ingredients []structs.MyIngredient) map[string][]types.WriteRequest {
+func buildIngredientListRequestItem(ingredients []structs.MyIngredient, index int) map[string][]types.WriteRequest {
 	writeRequests := make(map[string][]types.WriteRequest)
 	writeRequests[INGREDIENT_TABLE_NAME] = make([]types.WriteRequest, 0)
 	
-	for i, ingr := range ingredients {
-		if i >= 25 {
+	for i := index; i < (index + 25); i++ {
+		var ingr structs.MyIngredient
+		if i < len(ingredients) {
+			ingr = ingredients[i]
+		} else {
 			break
 		}
 
@@ -115,7 +118,7 @@ func buildIngredientListRequestItem(ingredients []structs.MyIngredient) map[stri
 	return writeRequests
 }
 
-func Put(item PutItem, table string) {
+func Put(item PutItem, table string, index int) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
 		o.Region = "us-east-1"
 		return nil
@@ -130,7 +133,7 @@ func Put(item PutItem, table string) {
 	if table == ALLRECIPES_TABLE_NAME {
 		writeRequest = buildRecipesPutRequestItem(item.Recipe)
 	} else if table == INGREDIENT_TABLE_NAME {
-		writeRequest = buildIngredientListRequestItem(item.Ingredients)
+		writeRequest = buildIngredientListRequestItem(item.Ingredients, index)
 	}
 	
 	_, err = svc.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
