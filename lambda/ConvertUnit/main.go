@@ -5,7 +5,6 @@ import (
 
 	// Third Party
 	lambda "github.com/aws/aws-lambda-go/lambda"
-
 	convert "mealmates.com/lambda/ConvertUnit/Convert"
 )
 
@@ -26,24 +25,6 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 
 func main() {
 	lambda.Start(HandleRequest)
-
-	// result, err := converter.Convert(2).From("teaspoons").To("tablespoon")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// result, err = converter.Convert(2).From("teaspoon").To("tablespoons")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// result, err = converter.Convert(2).From("pound").To("tablespoon")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// result, err = converter.Convert(20).From("pound").To("kilogram")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(result, "kilograms")
 }
 
 // BUILD COMMAND:
