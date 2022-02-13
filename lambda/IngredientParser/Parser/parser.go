@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,12 +13,12 @@ import (
 const RE_AMT_PATTERN = "[0-9¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.]+"
 const RE_PAR_PATTERN = "[()]"
 
-func printIngredient(i structs.Ingredient) {
-	fmt.Println("Name:  ", i.Name)
-	fmt.Println("Amount:", i.Amount)
-	fmt.Println("Unit:  ", i.Unit)
-	fmt.Println("-------------------")
-}
+// func printIngredient(i structs.Ingredient) {
+// 	fmt.Println("Name:  ", i.Name)
+// 	fmt.Println("Amount:", i.Amount)
+// 	fmt.Println("Unit:  ", i.Unit)
+// 	fmt.Println("-------------------")
+// }
 
 func convertStringToFloat(strAmount string) (float64, error) {
 	var err error = nil
@@ -114,7 +113,7 @@ func determineName(rawIngredient string) (string, error) {
 	}
 
 	unitFound := false
-	for word, _ := range constants.GetUnitsMap() {
+	for word := range constants.GetUnitsMap() {
 		re, _ = regexp.Compile(`(\b` + word + `)(s\b|\b)`)
 		units := re.FindAllIndex([]byte(name), 1)
 
