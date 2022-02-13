@@ -6,4 +6,3 @@ type Ingredient struct {
 	Unit   string  `json:"unit"`
 	Raw    string  `json:"raw"`
 }
-

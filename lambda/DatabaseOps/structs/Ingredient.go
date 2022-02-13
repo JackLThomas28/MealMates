@@ -6,3 +6,8 @@ type Ingredient struct {
 	Unit   string  `json:"unit"`
 	Raw    string  `json:"raw"`
 }
+
+type IngredientWithRecipeIds struct {
+	Name string `json:"name"`
+	IDs  []int  `json:"ids"`
+}

@@ -26,15 +26,6 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 
 func main() {
 	lambda.Start(HandleRequest)
-
-	// var testInput []string
-	// testInput = append(testInput, "¾ cup chopped green bell pepper")
-	// ingredients, err := parser.ParseIngredients(testInput)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// } else {
-	// 	fmt.Println(ingredients)
-	// }
 }
 
 // BUILD COMMAND:

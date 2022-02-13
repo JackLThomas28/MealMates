@@ -8,16 +8,16 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 
 	// Local packages
+	ingredient "mealmates.com/lambda/DatabaseOps/ingredient"
 	ops "mealmates.com/lambda/DatabaseOps/ops"
-	structs "mealmates.com/lambda/DatabaseOps/structs"
+	recipe "mealmates.com/lambda/DatabaseOps/recipe"
 )
 
-
 type MyEvent struct {
-	Recipe structs.Recipe `json:"recipe"`
-	Ingredients []structs.MyIngredient `json:"ingredients"`
-	Operation string `json:"operation"`
-	Table string `json:"table"`
+	Recipe     recipe.Recipe         `json:"recipe"`
+	Ingredient ingredient.Ingredient `json:"ingredient"`
+	Operation  string                `json:"operation"`
+	Table      string                `json:"table"`
 }
 
 type MyResponse struct {
@@ -25,17 +25,25 @@ type MyResponse struct {
 }
 
 func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
+	var err error
 	if request.Operation == "put" {
-		ops.Put(ops.PutItem{Recipe: request.Recipe, Ingredients: request.Ingredients}, request.Table, request.BeginningIndex)
-		return MyResponse{}, nil
+		err = ops.Put(ops.PutItem{Recipe: request.Recipe, Ingredient: request.Ingredient}, request.Table)
+	} else if request.Operation == "update" {
+		err = ops.Update(ops.UpdateItem{Recipe: request.Recipe, Ingredient: request.Ingredient}, request.Table) 
+	} else if request.Operation == "delete" {
+		err = ops.Delete(ops.DeleteItem{Recipe: request.Recipe, Ingredient: request.Ingredient}, request.Table)
+	} else {
+		err = errors.New("Error: invalid db operation " + request.Operation)
 	}
-	return MyResponse{}, errors.New("Unrecognized operation: " + request.Operation)
+
+	if err != nil {
+		return MyResponse{}, err
+	}
+	return MyResponse{}, nil
 }
 
 func main() {
 	lambda.Start(HandleRequest)
-
-	// HandleRequest(context.TODO(), MyEvent{})
 }
 
 // BUILD COMMAND:
