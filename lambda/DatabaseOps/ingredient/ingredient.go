@@ -65,3 +65,24 @@ func BuildUpdateItem(ingredient Ingredient) (dynamodb.UpdateItemInput, error) {
 		ConditionExpression: aws.String("NOT contains(recipeIds, :recipeId)"),
 	}, nil
 }
+
+// Scan based on name
+func BuildScanItem(ingredient Ingredient) (dynamodb.ScanInput, error) {
+	return dynamodb.ScanInput{
+		TableName: aws.String(TABLE_NAME),
+		FilterExpression: aws.String("contains(name, :name)"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":name": &types.AttributeValueMemberS{Value: ingredient.Name},
+		},
+	}, nil
+}
+
+// Get based on name (primary key)
+func BuildGetItem(ingredient Ingredient) (dynamodb.GetItemInput, error) {
+	return dynamodb.GetItemInput{
+		TableName: aws.String(TABLE_NAME),
+		Key: map[string]types.AttributeValue{
+			"name": &types.AttributeValueMemberS{Value: ingredient.Name},
+		},
+	}, nil
+}

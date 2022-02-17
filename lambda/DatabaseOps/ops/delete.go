@@ -3,10 +3,13 @@ package ops
 import (
 	"context"
 
+	// Third Party
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+
+	// Local
 	ingredient "mealmates.com/lambda/DatabaseOps/ingredient"
-	"mealmates.com/lambda/DatabaseOps/recipe"
+	recipe "mealmates.com/lambda/DatabaseOps/recipe"
 )
 
 type DeleteItem struct {

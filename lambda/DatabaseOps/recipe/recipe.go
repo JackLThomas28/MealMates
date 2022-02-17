@@ -140,3 +140,24 @@ func BuildUpdateItem(recipe Recipe) (dynamodb.UpdateItemInput, error) {
 		// ConditionExpression: aws.String("id = :id"),
 	}, nil
 }
+
+// Scan based on name
+func BuildScanItem(recipe Recipe) (dynamodb.ScanInput, error) {
+	return dynamodb.ScanInput{
+		TableName: aws.String(TABLE_NAME),
+		FilterExpression: aws.String("contains(name, :name)"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":name": &types.AttributeValueMemberS{Value: recipe.Name},
+		},
+	}, nil
+}
+
+// Get based on id (primary key)
+func BuildGetItem(recipe Recipe) (dynamodb.GetItemInput, error) {
+	return dynamodb.GetItemInput{
+		TableName: aws.String(TABLE_NAME),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberN{Value: strconv.Itoa(recipe.ID)},
+		},
+	}, nil
+}
