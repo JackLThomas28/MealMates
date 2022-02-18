@@ -8,16 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 
 	// Local
-	ingredient "mealmates.com/lambda/DatabaseOps/ingredient"
-	recipe "mealmates.com/lambda/DatabaseOps/recipe"
+	"mealmates.com/lambda/DatabaseOps/reqitem"
 )
 
-type DeleteItem struct {
-	Recipe     recipe.Recipe
-	Ingredient ingredient.Ingredient
-}
-
-func Delete(item DeleteItem, table string) error {
+func Delete(item reqitem.RequestItem) error {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
 		o.Region = "us-east-1"
 		return nil
@@ -29,11 +23,7 @@ func Delete(item DeleteItem, table string) error {
 
 	// Get the corresponding DeleteItem based on the recieved table name
 	var deleteItem dynamodb.DeleteItemInput
-	if table == recipe.TABLE_NAME {
-		deleteItem, err = recipe.BuildDeleteItem(item.Recipe)
-	} else if table == ingredient.TABLE_NAME {
-		deleteItem, err = ingredient.BuildDeleteItem(item.Ingredient)
-	}
+	deleteItem, err = item.BuildDeleteItem()
 
 	// Only continue if there are no errors
 	if err != nil {

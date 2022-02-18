@@ -3,18 +3,15 @@ package ops
 import (
 	"context"
 
+	// Third Party
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"mealmates.com/lambda/DatabaseOps/ingredient"
-	"mealmates.com/lambda/DatabaseOps/recipe"
+
+	// Local
+	"mealmates.com/lambda/DatabaseOps/reqitem"
 )
 
-type GetItem struct {
-	Recipe recipe.Recipe
-	Ingredient ingredient.Ingredient
-}
-
-func Get(item UpdateItem, table string) (*dynamodb.GetItemOutput, error) {
+func Get(item reqitem.RequestItem) (*dynamodb.GetItemOutput, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
 		o.Region = "us-east-1"
 		return nil
@@ -26,11 +23,7 @@ func Get(item UpdateItem, table string) (*dynamodb.GetItemOutput, error) {
 
 	// Get the corresponding GetItem based on the recieved table name
 	var getItem dynamodb.GetItemInput
-	if table == recipe.TABLE_NAME {
-		getItem, err = recipe.BuildGetItem(item.Recipe)
-	} else if table == ingredient.TABLE_NAME {
-		getItem, err = ingredient.BuildGetItem(item.Ingredient)
-	}
+	getItem, err = item.BuildGetItem()
 
 	// Only continue if there are no errors
 	if err != nil {

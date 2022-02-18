@@ -8,16 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 
 	//Local
-	"mealmates.com/lambda/DatabaseOps/ingredient"
-	"mealmates.com/lambda/DatabaseOps/recipe"
+	"mealmates.com/lambda/DatabaseOps/reqitem"
 )
 
-type UpdateItem struct {
-	Recipe     recipe.Recipe
-	Ingredient ingredient.Ingredient
-}
-
-func Update(item UpdateItem, table string) error {
+func Update(item reqitem.RequestItem) error {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
 		o.Region = "us-east-1"
 		return nil
@@ -29,11 +23,7 @@ func Update(item UpdateItem, table string) error {
 
 	// Get the corresponding UpdateItem based on the recieved table name
 	var updateItem dynamodb.UpdateItemInput
-	if table == recipe.TABLE_NAME {
-		updateItem, err = recipe.BuildUpdateItem(item.Recipe)
-	} else if table == ingredient.TABLE_NAME {
-		updateItem, err = ingredient.BuildUpdateItem(item.Ingredient)
-	}
+	updateItem, err = item.BuildUpdateItem()
 
 	// Only continue if there are no errors
 	if err != nil {

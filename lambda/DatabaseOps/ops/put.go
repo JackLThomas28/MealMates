@@ -9,16 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
 	// Local
-	ingredient "mealmates.com/lambda/DatabaseOps/ingredient"
-	recipe "mealmates.com/lambda/DatabaseOps/recipe"
+	"mealmates.com/lambda/DatabaseOps/reqitem"
 )
 
-type PutItem struct {
-	Recipe     recipe.Recipe
-	Ingredient ingredient.Ingredient
-}
-
-func Put(item PutItem, table string) error {
+func Put(item reqitem.RequestItem) error {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
 		o.Region = "us-east-1"
 		return nil
@@ -30,11 +24,7 @@ func Put(item PutItem, table string) error {
 
 	// Get the corresponding WriteRequest based on the received table name
 	var writeRequest map[string][]types.WriteRequest
-	if table == recipe.TABLE_NAME {
-		writeRequest, err = recipe.BuildWriteRequest(item.Recipe)
-	} else if table == ingredient.TABLE_NAME {
-		writeRequest, err = ingredient.BuildWriteRequest(item.Ingredient)
-	}
+	writeRequest, err = item.BuildWriteRequest()
 
 	// Only continue if there are no errors
 	if err != nil {
