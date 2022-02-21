@@ -87,11 +87,18 @@ func (i Ingredient) BuildGetItem() (dynamodb.GetItemInput, error) {
 	}, nil
 }
 
-func (i Ingredient) ParseResult(result map[string]types.AttributeValue) error {
-	// err := attributevalue.UnmarshalMap(result, i)
-	// if err != nil {
-	// 	return err
-	// }
+func (i *Ingredient) ParseResult(result map[string]types.AttributeValue) error {
+	name := result["name"].(*types.AttributeValueMemberS)
+	err := attributevalue.Unmarshal(name, &i.Name)
+	if err != nil {
+		return err
+	}
+
+	ids := result["recipeIds"].(*types.AttributeValueMemberL)
+	err = attributevalue.UnmarshalList(ids.Value, &i.RecipeIDs)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
