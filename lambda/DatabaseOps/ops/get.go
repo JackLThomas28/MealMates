@@ -11,7 +11,8 @@ import (
 	"mealmates.com/lambda/DatabaseOps/reqitem"
 )
 
-func Get(item reqitem.RequestItem) (*dynamodb.GetItemOutput, error) {
+// func Get(item reqitem.RequestItem) (map[string]types.AttributeValue, error) {
+func Get(item reqitem.RequestItem) (reqitem.RequestItem, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
 		o.Region = "us-east-1"
 		return nil
@@ -21,7 +22,7 @@ func Get(item reqitem.RequestItem) (*dynamodb.GetItemOutput, error) {
 		return nil, err
 	}
 
-	// Get the corresponding GetItem based on the recieved table name
+	// Get the corresponding GetItem
 	var getItem dynamodb.GetItemInput
 	getItem, err = item.BuildGetItem()
 
@@ -32,5 +33,12 @@ func Get(item reqitem.RequestItem) (*dynamodb.GetItemOutput, error) {
 
 	svc := dynamodb.NewFromConfig(cfg)
 	// Get the item
-	return svc.GetItem(context.TODO(), &getItem)
+	result, err := svc.GetItem(context.TODO(), &getItem)
+	if err != nil {
+		return nil, err
+	}
+
+	err = item.ParseResult(result.Item)
+	
+	return item, err
 }

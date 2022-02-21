@@ -86,3 +86,12 @@ func (i Ingredient) BuildGetItem() (dynamodb.GetItemInput, error) {
 		},
 	}, nil
 }
+
+func (i Ingredient) ParseResult(result map[string]types.AttributeValue) error {
+	// err := attributevalue.UnmarshalMap(result, i)
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}

@@ -11,4 +11,5 @@ type RequestItem interface {
 	BuildUpdateItem() (dynamodb.UpdateItemInput, error)
 	BuildScanItem() (dynamodb.ScanInput, error)
 	BuildGetItem() (dynamodb.GetItemInput, error)
+	ParseResult(map[string]types.AttributeValue) error
 }
