@@ -12,14 +12,14 @@ import (
 )
 
 // func Get(item reqitem.RequestItem) (map[string]types.AttributeValue, error) {
-func Get(item reqitem.RequestItem) (reqitem.RequestItem, error) {
+func Get(item reqitem.RequestItem) error {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
 		o.Region = "us-east-1"
 		return nil
 	})
 	// Only continue if there are no errors
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Get the corresponding GetItem
@@ -28,17 +28,15 @@ func Get(item reqitem.RequestItem) (reqitem.RequestItem, error) {
 
 	// Only continue if there are no errors
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	svc := dynamodb.NewFromConfig(cfg)
 	// Get the item
 	result, err := svc.GetItem(context.TODO(), &getItem)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = item.ParseResult(result.Item)
-	
-	return item, err
+	return item.ParseResult(result.Item)
 }

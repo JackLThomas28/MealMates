@@ -1,6 +1,7 @@
 package reqitem
 
 import (
+	"fmt"
 	"strconv"
 
 	// Third Party
@@ -70,9 +71,12 @@ func (i Ingredient) BuildUpdateItem() (dynamodb.UpdateItemInput, error) {
 func (i Ingredient) BuildScanItem() (dynamodb.ScanInput, error) {
 	return dynamodb.ScanInput{
 		TableName: aws.String(INGR_TABLE_NAME),
-		FilterExpression: aws.String("contains(name, :name)"),
+		FilterExpression: aws.String("contains(#name, :name)"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":name": &types.AttributeValueMemberS{Value: i.Name},
+		},
+		ExpressionAttributeNames: map[string]string{
+			"#name": "name",
 		},
 	}, nil
 }
@@ -87,7 +91,7 @@ func (i Ingredient) BuildGetItem() (dynamodb.GetItemInput, error) {
 	}, nil
 }
 
-func (i *Ingredient) ParseResult(result map[string]types.AttributeValue) error {
+func extractIngredient(i *Ingredient, result map[string]types.AttributeValue) error {
 	name := result["name"].(*types.AttributeValueMemberS)
 	err := attributevalue.Unmarshal(name, &i.Name)
 	if err != nil {
@@ -101,4 +105,37 @@ func (i *Ingredient) ParseResult(result map[string]types.AttributeValue) error {
 	}
 
 	return nil
+}
+
+func (i *Ingredient) ParseResult(result map[string]types.AttributeValue) error {
+	err := extractIngredient(i, result)
+	return err
+
+	// name := result["name"].(*types.AttributeValueMemberS)
+	// err := attributevalue.Unmarshal(name, &i.Name)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// ids := result["recipeIds"].(*types.AttributeValueMemberL)
+	// err = attributevalue.UnmarshalList(ids.Value, &i.RecipeIDs)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return nil
+}
+
+func (i Ingredient) ParseScanResults(results []map[string]types.AttributeValue) ([]RequestItem, error) {
+	var ingrList []RequestItem
+	var err error
+
+	fmt.Println(results)
+
+	for _, ingr := range results {
+		curIngr := &Ingredient{}
+		err = extractIngredient(curIngr, ingr)
+		ingrList = append(ingrList, curIngr)
+	}
+	return ingrList, err
 }

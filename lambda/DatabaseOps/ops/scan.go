@@ -11,7 +11,7 @@ import (
 	"mealmates.com/lambda/DatabaseOps/reqitem"
 )
 
-func Scan(item reqitem.RequestItem) (*dynamodb.ScanOutput, error) {
+func Scan(item reqitem.RequestItem) ([]reqitem.RequestItem, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
 		o.Region = "us-east-1"
 		return nil
@@ -32,5 +32,12 @@ func Scan(item reqitem.RequestItem) (*dynamodb.ScanOutput, error) {
 
 	svc := dynamodb.NewFromConfig(cfg)
 	// Scan with the item
-	return svc.Scan(context.TODO(), &scanItem)
+	result, err := svc.Scan(context.TODO(), &scanItem)
+	if err != nil {
+		return nil, err
+	}
+
+	reqItems, err := item.ParseScanResults(result.Items)
+
+	return reqItems, err
 }

@@ -22,12 +22,15 @@ type MyEvent struct {
 
 type MyResponse struct {
 	Success bool `json:"success"`
-	Body reqitem.RequestItem `json:"body"`
+	Body []reqitem.RequestItem `json:"body"`
+	
 	// Body map[string]types.AttributeValue `json:"body"`
 }
 
 func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {	
+	myResponse := MyResponse{}
 	var err error
+	var scanResults []reqitem.RequestItem
 
 	// Resolve the request item
 	var reqItem reqitem.RequestItem
@@ -44,9 +47,6 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 	}
 
 	// Determine which type of operation to perform and perform it
-	// var output reqitem.RequestItem
-	// var output map[string]types.AttributeValue
-	// var scanOutput *dynamodb.ScanOutput
 	if request.Operation == "put" {
 		err = ops.Put(reqItem)
 	} else if request.Operation == "update" {
@@ -54,17 +54,25 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 	} else if request.Operation == "delete" {
 		err = ops.Delete(reqItem)
 	} else if request.Operation == "scan" {
-		_, err = ops.Scan(reqItem)
+		scanResults, err = ops.Scan(reqItem)
 	} else if request.Operation == "get" {
-		_, err = ops.Get(reqItem)
+		err = ops.Get(reqItem)
 	} else {
 		err = errors.New("Error: invalid db operation " + request.Operation)
 	}
 	// Only continue if valid db operation
 	if err != nil {
-		return MyResponse{Success: false}, err
+		myResponse.Success = false
+	} else {
+		myResponse.Success = true
+		// Append the results
+		if len(scanResults) > 0 {
+			myResponse.Body = scanResults
+		} else {
+			myResponse.Body = append(myResponse.Body, reqItem)
+		}
 	}
-	return MyResponse{Success: true, Body: reqItem}, nil
+	return myResponse, err
 }
 
 func main() {
