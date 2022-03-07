@@ -1,6 +1,7 @@
 package reqitem
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -53,15 +54,20 @@ func (i Ingredient) BuildDeleteItem() (dynamodb.DeleteItemInput, error) {
 
 // Update the recipeIds list
 func (i Ingredient) BuildUpdateItem() (dynamodb.UpdateItemInput, error) {
+	ingrRecipeIDs, err := attributevalue.MarshalList(i.RecipeIDs)
+	if err != nil {
+		return dynamodb.UpdateItemInput{}, err
+	}
 	// Only update the recipeIds if the recipeId is NOT in the list
 	return dynamodb.UpdateItemInput{
 		TableName: aws.String(INGR_TABLE_NAME),
 		Key: map[string]types.AttributeValue{
 			"name": &types.AttributeValueMemberS{Value: i.Name},
 		},
-		UpdateExpression: aws.String("set recipeIds[0] = :recipeId"),
+		UpdateExpression: aws.String("set recipeIds = list_append(recipeIds, :recipeIds)"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":recipeId": &types.AttributeValueMemberN{Value: strconv.Itoa(i.RecipeID)},
+			":recipeIds": &types.AttributeValueMemberL{Value: ingrRecipeIDs},
+			":recipeId": &types.AttributeValueMemberN{Value: strconv.Itoa(i.RecipeIDs[0])},
 		},
 		ConditionExpression: aws.String("NOT contains(recipeIds, :recipeId)"),
 	}, nil
@@ -108,22 +114,11 @@ func extractIngredient(i *Ingredient, result map[string]types.AttributeValue) er
 }
 
 func (i *Ingredient) ParseResult(result map[string]types.AttributeValue) error {
+	if result == nil {
+		return errors.New("ingredient parseresult: could not locate ingredient")
+	}
 	err := extractIngredient(i, result)
 	return err
-
-	// name := result["name"].(*types.AttributeValueMemberS)
-	// err := attributevalue.Unmarshal(name, &i.Name)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// ids := result["recipeIds"].(*types.AttributeValueMemberL)
-	// err = attributevalue.UnmarshalList(ids.Value, &i.RecipeIDs)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return nil
 }
 
 func (i Ingredient) ParseScanResults(results []map[string]types.AttributeValue) ([]RequestItem, error) {

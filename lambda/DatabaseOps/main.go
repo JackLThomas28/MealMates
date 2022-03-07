@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 
 	// Local
-
 	ops "mealmates.com/lambda/DatabaseOps/ops"
 	"mealmates.com/lambda/DatabaseOps/reqitem"
 )
@@ -23,14 +22,13 @@ type MyEvent struct {
 type MyResponse struct {
 	Success bool `json:"success"`
 	Body []reqitem.RequestItem `json:"body"`
-	
 	// Body map[string]types.AttributeValue `json:"body"`
 }
 
 func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {	
-	myResponse := MyResponse{}
-	var err error
+	myResponse := MyResponse{Success: true}
 	var scanResults []reqitem.RequestItem
+	var err error
 
 	// Resolve the request item
 	var reqItem reqitem.RequestItem
@@ -39,11 +37,12 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 	} else if request.Table == reqitem.INGR_TABLE_NAME {
 		reqItem = &request.Ingredient
 	} else {
-		err = errors.New("Error: invalid table name: " + request.Table)
+		myResponse.Success = false
+		err = errors.New("main handlerequest: invalid table name: " + request.Table)
 	}
 	// Only continue if table exists
 	if err != nil {
-		return MyResponse{Success: false}, err
+		return myResponse, err
 	}
 
 	// Determine which type of operation to perform and perform it
@@ -58,13 +57,13 @@ func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
 	} else if request.Operation == "get" {
 		err = ops.Get(reqItem)
 	} else {
-		err = errors.New("Error: invalid db operation " + request.Operation)
+		err = errors.New("main handlerequest: invalid db operation " + request.Operation)
 	}
 	// Only continue if valid db operation
 	if err != nil {
 		myResponse.Success = false
+		return myResponse, err
 	} else {
-		myResponse.Success = true
 		// Append the results
 		if len(scanResults) > 0 {
 			myResponse.Body = scanResults
@@ -79,5 +78,7 @@ func main() {
 	lambda.Start(HandleRequest)
 }
 
-// BUILD COMMAND:
+// BUILD COMMANDS:
 // GOOS=linux go build main.go
+// zip main.zip main
+// aws lambda update-function-code --function-name dataBaseOperations --zip-file fileb://./main.zip
