@@ -10,6 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 )
 
+type ErrorResponse struct {
+	ErrorMessage string `json:"errorMessage"`
+	ErrorType string `json:"errorType"`
+}
+
 type staticCredentialsProvider struct {
 	Value aws.Credentials
 }

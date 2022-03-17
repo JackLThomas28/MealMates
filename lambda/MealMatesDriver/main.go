@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 
 	// Third Party
 	"github.com/aws/aws-lambda-go/lambda"
 
 	// Local
-	"mealmates.com/lambda/MealMatesDriver/databaseoperations"
+	databaseops "mealmates.com/lambda/MealMatesDriver/databaseoperations"
 	"mealmates.com/lambda/MealMatesDriver/getrecipe"
 	"mealmates.com/lambda/MealMatesDriver/mylambda"
 	"mealmates.com/lambda/MealMatesDriver/parseingredients"
@@ -24,49 +26,12 @@ type MyResponse struct {
 	// Recipe structs.StandardRecipe `json:"recipe"`
 }
 
-
-func GetDatabaseRequestInBytes(operation string, table string, ingredient parseingredients.DBIngredient, recipe getrecipe.Recipe) []byte {
-	var body []byte
-	// Request with ingredient
-	if ingredient.Name != "" && recipe.Name == "" {
-		// Convert the list of recipeIds to bytes
-		var idsBytes []byte
-		for i, id := range ingredient.RecipeIds {
-			idStr := strconv.Itoa(id)
-			idsBytes = append(idsBytes, []byte(idStr)...)
-			// Don't append ',' to last recipe Id in list
-			if i < len(ingredient.RecipeIds) - 1 {
-				idsBytes = append(idsBytes, byte(','))
-			}
-		}
-
-		body = []byte(
-			`"ingredient": {`                        +
-				`"name": "` + ingredient.Name + `",` +
-				`"recipeIds": [`)
-		body = append(body, idsBytes...)
-		body = append(body, []byte(
-				`]`                                  + 
-			`}`)...)
-	} else if ingredient.Name == "" && recipe.Name != "" {
-		// TODO: Implement when we recieve a recipe
-	} else {
-		// TODO: Implement when we don't recieve ingredient or recipe
-	}
-
-	// Build the request
-	request := []byte(
-		`{`                                     +
-			`"operation": "` + operation + `",` +
-			`"table": "Ingredients",`)
-	request = append(request, body...)
-	request = append(request, []byte(
-		`}`)...)
-	
-	return request
-}
+const (
+	FILE_NAME = "main"
+)
 
 func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
+	const FUNC_NAME = " HandleRequest: "
 	myResponse := MyResponse{}
 
 	// ---------------------------------------------------------------------- //
@@ -74,155 +39,127 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 	// ---------------------------------------------------------------------- //
 
 	grResp, err := getrecipe.GetRecipe(ctx, request.URL)
-	// payload, err := mylambda.InvokeLambda(ctx, "getRecipe", []byte(`{"url":"` + request.URL + `"}`))
-	// // Only continue if no errors
-	// if err != nil {
-	// 	fmt.Println("Error:", err)
-	// 	return myResponse, err
-	// }
-	// // Convert the payload to a Recipe object
-	// var gr getrecipe.GetRecipeResponse
-	// err = json.Unmarshal(payload, &gr)
-	// if err != nil {
-	// 	fmt.Println("Error:", err)
-	// 	return myResponse, err
-	// }
+	if err != nil {
+		return myResponse, err
+	}
+	fmt.Println("GetRecipe Response", grResp)
 
 	// ---------------------------------------------------------------------- //
 	// 2. Parse the Ingredients
 	// ---------------------------------------------------------------------- //
 
 	piResp, err := parseingredients.ParseIngredients(ctx, grResp.Recipe.Ingredients)
-	// Convert the ingredients to []byte
-	// ingrListBytes := []byte(`{"ingredients": [`)
-	// for i, ingr := range gr.Recipe.Ingredients {
-	// 	tIngr, err := json.Marshal(ingr)
-	// 	if err != nil {
-	// 		fmt.Println("Error:", err)
-	// 	} else {
-	// 		ingrListBytes = append(ingrListBytes, tIngr...)
-	// 		// Don't add the last comma
-	// 		if i < len(gr.Recipe.Ingredients) - 1 {
-	// 			ingrListBytes = append(ingrListBytes, byte(','))
-	// 		}
-	// 	}
-	// }
-	// ingrListBytes = append(ingrListBytes, []byte(`]}`)...)
-
-	// payload, err = mylambda.InvokeLambda(ctx, "parseIngredients", ingrListBytes)
-	// if err != nil {
-	// 	fmt.Println("Error:", err)
-	// 	return myResponse, err
-	// }
-
+	if err != nil {
+		return myResponse, err
+	}
+	fmt.Println("ParseIngredient Response", piResp)
+	
 	// ---------------------------------------------------------------------- //
 	// 3. Scan the DB for the ingredients
 	// ---------------------------------------------------------------------- //
-
-	// Convert the payload to Ingredient objects
-	var parseIngredients parseingredients.ParseIngredientsResponse
-	err = json.Unmarshal(payload, &parseIngredients)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return myResponse, err
-	}
-
 	// Loop through each ingredient and query ingredient db.
 
 	// List of ingredients that should be added to the db.
-	var ingredientsToAdd []parseingredients.DBIngredient
+	var ingredientsToAdd []databaseops.Ingredient
 	// List of ingredients to update
-	var ingredientsToUpdate []parseingredients.DBIngredient
+	var ingredientsToUpdate []databaseops.Ingredient
 	// List of all ingredients in DB form
-	var ingredients []parseingredients.DBIngredient
+	var allIngredients []databaseops.Ingredient
 
 	// To Do: Rework the logic here. Results are dependent on Ingredient Parsing
-	for _, pIngr := range parseIngredients.Ingredients {
-		dbIngr := parseingredients.DBIngredient{Name: pIngr.Name}
+	for _, pIngr := range piResp.Ingredients {
+		dIngr := databaseops.Ingredient{Name: pIngr.Name, RecipeIds: []int{grResp.Recipe.ID}}
+		doResp, err := databaseops.DatabaseOperation(ctx, dIngr)
+		fmt.Println("DatabaseOperation Response", doResp)
+		if err != nil || !doResp.Success {
+			// Try converting the payload to an Error Response Object
+			var errRsp mylambda.ErrorResponse
+			err = json.Unmarshal(doResp.RawPayload, &errRsp)
+			if err != nil {
+				// We didn't receive an error response either...exit
+				fmt.Println(FILE_NAME + FUNC_NAME, err)
+				return myResponse, err
+			} else {
+				// We received an error - likely ingredient is missing from db
+				if errRsp.ErrorMessage != "ingredient parseresult: could not locate ingredient" {
+					return myResponse, errors.New(FILE_NAME + FUNC_NAME + "unknown error")
+				}
 
-		// Get the ingredient
-		pIngrListBytes := GetDatabaseRequestInBytes("get", "Ingredients", dbIngr, getrecipe.Recipe{})
-		payload, err = mylambda.InvokeLambda(ctx, "dataBaseOperations", pIngrListBytes)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return myResponse, err
-		}
-		fmt.Println("DB Payload:", string(payload))
-		
-		// ------------------------------------------------------------------ //
-		// 3a. Add the ingredient to DB if it does not exist
-		// ------------------------------------------------------------------ //
-
-		// Check if we received an error
-		var errResp databaseoperations.OperationError
-		err = json.Unmarshal(payload, &errResp)
-		if err != nil {
-			fmt.Println("main handlerequest:", err)
-		} else {
-			// If we were able to unmarshal response into error -> 
-			// then we received error response
-			if errResp.ErrorMessage == "ingredient parseresult: could not locate ingredient" {
-				fmt.Println("Could not locate ingredient " + pIngr.Name)
-				dbIngredient := parseingredients.DBIngredient{Name: pIngr.Name, RecipeIds: []int{gr.Recipe.ID}}
-				ingredientsToAdd = append(ingredientsToAdd, dbIngredient)
-
-				// Append the ingredient to the master list
-				ingredients = append(ingredients, dbIngredient)
+				fmt.Println("Could not located ingredient " + dIngr.Name)
+				fmt.Println("Adding ingredient", dIngr)
+				ingredientsToAdd = append(ingredientsToAdd, dIngr)
 			}
 		}
-
-		// Convert DB response to DB object
-		var opResp databaseoperations.OperationResponse
-		err = json.Unmarshal(payload, &opResp)
-		if err != nil {
-			fmt.Println("main handlerequest:", err)
-		} else {
-			// Check the ingredient's recipeIds
-			found := false
-			for _, item := range opResp.Body {
-				if found {
+		// Check the ingredient to see if it contains this recipe's ID
+		found := false
+		for _, item := range doResp.Body {
+			dIngr = item
+			if found {
+				break
+			}
+			for _, id := range item.RecipeIds {
+				// Exit if we've found a match
+				if id == grResp.Recipe.ID {
+					found = true
 					break
 				}
-				for _, id := range item.GetRecipeIds() {
-					// Exit if we've found a match
-					if id == gr.Recipe.ID {
-						found = true
-						break
-					}
-				}
 			}
-
-			// If we didn't find it, add it to the db
 			if !found {
-				dbIngredient := parseingredients.DBIngredient{Name: pIngr.Name, RecipeIds: []int{gr.Recipe.ID}}
-				ingredientsToUpdate = append(ingredientsToUpdate, dbIngredient)
-
-				// Append the ingredient to the master list
-				// dbIngredient.RecipeIds = append(dbIngredient.RecipeIds, opResp.Body)
-				// ingredients = append(ingredients, )
+				fmt.Println("Ingredient " + dIngr.Name + " does not contain recipe ID " + strconv.Itoa(dIngr.RecipeIds[0]))
+				fmt.Println("Updating ingredient", dIngr)
+				ingredientsToUpdate = append(ingredientsToUpdate, dIngr)
 			}
 		}
-
-		// ------------------------------------------------------------------ //
-		// 4. Determine which recipes share the most ingredients with original recipe
-		// ------------------------------------------------------------------ //
-
-
+		// Add the ingredient to the master list
+		allIngredients = append(allIngredients, dIngr)
 	}
 
-	// Add the missing ingredients to the db
-	for _, dbIngr := range ingredientsToAdd {
-		payloadIngrBytes := GetDatabaseRequestInBytes("put", "Ingredients", dbIngr, getrecipe.Recipe{})
-		payload, err = mylambda.InvokeLambda(ctx, "dataBaseOperations", payloadIngrBytes)
+	databaseops.UpdateIngredientsTable(ctx, ingredientsToAdd, databaseops.PUT)
+	databaseops.UpdateIngredientsTable(ctx, ingredientsToUpdate, databaseops.UPDATE)
+
+	// ---------------------------------------------------------------------- //
+	// 4. Determine which recipes share the most ingredients with original recipe
+	// ---------------------------------------------------------------------- //
+
+	fmt.Println(allIngredients)
+	recipeIdAmts := make(map[int]int)
+	for _, ingr := range allIngredients {
+		for _, id := range ingr.RecipeIds {
+			if recipeIdAmts[id] == 0 {
+				recipeIdAmts[id] = 1
+			} else {
+				recipeIdAmts[id] += 1
+			}
+		}
 	}
 
-	// Update the ingredient's recipeIds list
-	for _, dbIngr := range ingredientsToUpdate {
-		payloadIngrBytes := GetDatabaseRequestInBytes("update", "Ingredients", dbIngr, getrecipe.Recipe{})
-		payload, err = mylambda.InvokeLambda(ctx, "dataBaseOperations", payloadIngrBytes)
+	var recipesAndOccurrences []RecipeAndOccurrence
+	for key, val := range recipeIdAmts {
+		recipesAndOccurrences = append(recipesAndOccurrences, RecipeAndOccurrence{ID: key, Occurrences: val})
 	}
 
+	sort.Sort(byOccurrences(recipesAndOccurrences))
+	fmt.Println(recipesAndOccurrences)
 	return myResponse, nil
+}
+
+type byOccurrences []RecipeAndOccurrence
+
+type RecipeAndOccurrence struct {
+	ID int
+	Occurrences int
+}
+
+func (r byOccurrences) Len() int {
+	return len(r)
+}
+
+func (r byOccurrences) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
+
+func (r byOccurrences) Less(i, j int) bool {
+	return r[i].Occurrences < r[j].Occurrences
 }
 
 func main() {

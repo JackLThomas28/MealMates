@@ -5,7 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	// Local
 	"mealmates.com/lambda/MealMatesDriver/mylambda"
+)
+
+const (
+	FILE_NAME = "parseingredients"
+	LAMBDA_NAME = "parseIngredients"
 )
 
 type Ingredient struct {
@@ -15,25 +21,9 @@ type Ingredient struct {
 	Raw    string  `json:"raw"`
 }
 
-type DBIngredient struct {
-	Name string `json:"name"`
-	RecipeIds []int `json:"recipeIds"`
-	// TODO: Remove RecipeId
-	RecipeId int `json:"recipeId"`
-}
-
-func (d DBIngredient)GetRecipeIds() []int {
-	return d.RecipeIds
-}
-
 type Response struct {
 	Ingredients []Ingredient `json:"ingredients"`
 }
-
-const (
-	FILE_NAME = "parseingredients"
-	LAMBDA_NAME = "parseIngredients"
-)
 
 func convertIngredientsToBytes(ingrs []string) ([]byte, error) {
 	const FUNC_NAME = " convertIngredientsToBytes:"
