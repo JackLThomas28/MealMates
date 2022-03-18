@@ -1,8 +1,7 @@
 package recipe
 
 import (
-	"github.com/JackLThomas28/MealMates/lambda/Objects/ingredient"
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/JackLThomas28/MealMates/lambda/Objects/Ingredient/ingredient"
 )
 
 type Response struct {
@@ -39,5 +38,4 @@ type Recipe struct {
 	Rating       Rating    `json:"rating"`
 	Nutrition    Nutrition `json:"nutrition"`
 	ParsedIngredients []ingredient.Ingredient `json:"parsedIngredients"`
-	poop aws.Credentials
 }
