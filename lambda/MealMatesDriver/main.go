@@ -23,7 +23,7 @@ type MyRequest struct {
 }
 
 type MyResponse struct {
-	// Recipe structs.StandardRecipe `json:"recipe"`
+	Recipes []getrecipe.Recipe `json:"recipes"`
 }
 
 const (
@@ -43,6 +43,7 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 		return myResponse, err
 	}
 	fmt.Println("GetRecipe Response", grResp)
+	dbRecipe := databaseops.Recipe{ID: grResp.Recipe.ID}
 
 	// ---------------------------------------------------------------------- //
 	// 2. Parse the Ingredients
@@ -53,9 +54,18 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 		return myResponse, err
 	}
 	fmt.Println("ParseIngredient Response", piResp)
+
+	// ---------------------------------------------------------------------- //
+	// 3. Add the Recipe to the DB if it isn't already there
+	// ---------------------------------------------------------------------- //
+	doResp, err := databaseops.DatabaseOperation(ctx, dbRecipe)
+	if err != nil {
+		return myResponse, err
+	}
+	fmt.Println("DatabaseOperation Response", doResp)
 	
 	// ---------------------------------------------------------------------- //
-	// 3. Scan the DB for the ingredients
+	// 4. Scan the DB for the ingredients
 	// ---------------------------------------------------------------------- //
 	// Loop through each ingredient and query ingredient db.
 
@@ -69,8 +79,9 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 	// To Do: Rework the logic here. Results are dependent on Ingredient Parsing
 	for _, pIngr := range piResp.Ingredients {
 		dIngr := databaseops.Ingredient{Name: pIngr.Name, RecipeIds: []int{grResp.Recipe.ID}}
-		doResp, err := databaseops.DatabaseOperation(ctx, dIngr)
+		doResp, err = databaseops.DatabaseOperation(ctx, dIngr)
 		fmt.Println("DatabaseOperation Response", doResp)
+		// Move this logic to DB Driver
 		if err != nil || !doResp.Success {
 			// Try converting the payload to an Error Response Object
 			var errRsp mylambda.ErrorResponse
@@ -118,7 +129,7 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 	databaseops.UpdateIngredientsTable(ctx, ingredientsToUpdate, databaseops.UPDATE)
 
 	// ---------------------------------------------------------------------- //
-	// 4. Determine which recipes share the most ingredients with original recipe
+	// 5. Determine which recipes share the most ingredients with original recipe
 	// ---------------------------------------------------------------------- //
 
 	fmt.Println(allIngredients)

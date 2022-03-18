@@ -7,7 +7,9 @@ import (
 	"strconv"
 
 	// Local
+	"mealmates.com/lambda/MealMatesDriver/getrecipe"
 	"mealmates.com/lambda/MealMatesDriver/mylambda"
+	"mealmates.com/lambda/MealMatesDriver/parseingredients"
 )
 
 type Response struct {
@@ -21,10 +23,6 @@ type OperationError struct {
 	ErrorType string `json:"errorType"`
 }
 
-type ReqItem interface {
-	GetRecipeIds() []int
-}
-
 type Ingredient struct {
 	Name string `json:"name"`
 	RecipeIds []int `json:"recipeIds"`
@@ -32,8 +30,53 @@ type Ingredient struct {
 	RecipeId int `json:"recipeId"`
 }
 
-func (i Ingredient)GetRecipeIds() []int {
-	return i.RecipeIds
+type Recipe struct {
+	ID           int       `json:"id"`
+	Name         string    `json:"name"`
+	Image        getrecipe.Image     `json:"image"`
+	Description  string    `json:"description"`
+	PrepTime     string    `json:"prepTime"`
+	CookTime     string    `json:"cookTime"`
+	TotalTime    string    `json:"totalTime"`
+	RecipeYield  string    `json:"recipeYield"`
+	Ingredients  []string  `json:"ingredients"`
+	Instructions []string  `json:"instructions"`
+	Categories   []string  `json:"categories"`
+	Rating       getrecipe.Rating    `json:"rating"`
+	Nutrition    getrecipe.Nutrition `json:"nutrition"`
+	ParsedIngredients []parseingredients.Ingredient `json:"parsedIngredients"`
+}
+
+type ReqItem interface {
+	IsRecipe() bool
+	GetRecipe() Recipe
+	IsIngredient() bool
+	GetIngredient() Ingredient
+}
+func (i Ingredient) IsIngredient() bool {
+	return true
+}
+func (i Ingredient) IsRecipe() bool {
+	return false
+}
+func (i Ingredient) GetIngredient() Ingredient {
+	return i
+}
+func (i Ingredient) GetRecipe() Recipe {
+	return Recipe{}
+}
+
+func (r Recipe) IsIngredient() bool {
+	return false
+}
+func (r Recipe) IsRecipe() bool {
+	return true
+}
+func (r Recipe) GetIngredient() Ingredient {
+	return Ingredient{}
+}
+func (r Recipe) GetRecipe() Recipe {
+	return r
 }
 
 const (
@@ -45,13 +88,24 @@ const (
 	PUT = "put"
 	// Table Names
 	INGREDIENTS_TABLE = "Ingredients"
+	RECIPES_TABLE = "AllRecipes"
 )
 
-func DatabaseOperation(ctx context.Context, ingr Ingredient) (Response, error) {
+func DatabaseOperation(ctx context.Context, reqObj ReqItem) (Response, error) {
 	const FUNC_NAME = " DatabaseOperation:"
 	var resp Response
+	var inPayload []byte
 
-	inPayload := buildIngredientRequest(GET, INGREDIENTS_TABLE, ingr)
+	if reqObj.IsRecipe() {
+		recipe := reqObj.GetRecipe()
+		inPayload = buildRecipeRequest(GET, recipe)
+
+	} else if reqObj.IsIngredient() {
+		ingr := reqObj.GetIngredient()
+		inPayload = buildIngredientRequest(GET, ingr)
+	} else {
+		// Error path
+	}
 	outPayload, err := mylambda.InvokeLambda(ctx, LAMBDA_NAME, inPayload)
 	// Only continue if no errors
 	if err != nil {
@@ -73,14 +127,14 @@ func DatabaseOperation(ctx context.Context, ingr Ingredient) (Response, error) {
 func UpdateIngredientsTable(ctx context.Context, ingrs []Ingredient, action string) error {
 	var err error
 	for _, ingr := range ingrs {
-		inPayload := buildIngredientRequest(action, INGREDIENTS_TABLE, ingr)
+		inPayload := buildIngredientRequest(action, ingr)
 		_, err = mylambda.InvokeLambda(ctx, LAMBDA_NAME, inPayload)
 	}
 	return err
 }
 
 // Builds an ingredient request item
-func buildIngredientRequest(operation string, table string, ingredient Ingredient) []byte {
+func buildIngredientRequest(operation string, ingredient Ingredient) []byte {
 	var body []byte
 	// Request with ingredient
 	if ingredient.Name != "" {
@@ -101,13 +155,28 @@ func buildIngredientRequest(operation string, table string, ingredient Ingredien
 				`"recipeIds": [`)
 		body = append(body, idsBytes...)
 		body = append(body, []byte(
-				`]`                                  + 
+				`]`                                  +
 			`}`)...)
 	} else {
 		// TODO: Implement when we don't recieve ingredient
 	}
-
 	return getRequestObject(operation, body, INGREDIENTS_TABLE)
+}
+
+// Builds a recipe request item
+func buildRecipeRequest(operation string, recipe Recipe) []byte {
+	var body []byte
+	// Request with ingredient
+	if recipe.Name != "" {
+		body = []byte(
+			`"recipe": {`                                 +
+				`"id": "` + strconv.Itoa(recipe.ID) + `"` +
+			`}`)
+	} else {
+		// TODO: Implement when we don't recieve ingredient
+	}
+
+	return getRequestObject(operation, body, RECIPES_TABLE)
 }
 
 func getRequestObject(operation string, body []byte, tableName string) []byte {
