@@ -6,3 +6,10 @@ type Ingredient struct {
 	Unit   string  `json:"unit"`
 	Raw    string  `json:"raw"`
 }
+
+type DBIngredient struct {
+	Name string `json:"name"`
+	RecipeIds []int `json:"recipeIds"`
+	// TODO: Remove RecipeId
+	// RecipeId int `json:"recipeId"`
+}
