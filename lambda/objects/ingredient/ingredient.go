@@ -7,7 +7,7 @@ type Ingredient struct {
 	Raw    string  `json:"raw"`
 }
 
-type DbIngredient struct {
+type IngredientDB struct {
 	Name string `json:"name"`
 	RecipeIds []int `json:"recipeIds"`
 	// TODO: Remove RecipeId
