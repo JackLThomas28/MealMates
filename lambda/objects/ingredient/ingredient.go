@@ -11,5 +11,5 @@ type DBIngredient struct {
 	Name string `json:"name"`
 	RecipeIds []int `json:"recipeIds"`
 	// TODO: Remove RecipeId
-	// RecipeId int `json:"recipeId"`
+	RecipeId int `json:"recipeId"`
 }
