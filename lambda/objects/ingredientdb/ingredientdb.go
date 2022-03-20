@@ -1,4 +1,4 @@
-package ingredient
+package ingredientdb
 
 type IngredientDB struct {
 	Name string `json:"name"`
