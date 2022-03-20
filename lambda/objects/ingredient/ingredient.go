@@ -7,9 +7,9 @@ type Ingredient struct {
 	Raw    string  `json:"raw"`
 }
 
-// type IngredientDB struct {
-// 	Name string `json:"name"`
-// 	RecipeIds []int `json:"recipeIds"`
-// 	// TODO: Remove RecipeId
-// 	RecipeId int `json:"recipeId"`
-// }
+type IngredientDB struct {
+	Name string `json:"name"`
+	RecipeIds []int `json:"recipeIds"`
+	// TODO: Remove RecipeId
+	RecipeId int `json:"recipeId"`
+}
