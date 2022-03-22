@@ -9,13 +9,12 @@ import (
 	"strconv"
 
 	// Third Party
+
+	"github.com/JackLThomas28/MealMates/lambda/objects/recipe"
 	"github.com/aws/aws-lambda-go/lambda"
 
 	// Local
-	databaseops "mealmates.com/lambda/MealMatesDriver/databaseoperations"
-	"mealmates.com/lambda/MealMatesDriver/getrecipe"
 	"mealmates.com/lambda/MealMatesDriver/mylambda"
-	"mealmates.com/lambda/MealMatesDriver/parseingredients"
 )
 
 type MyRequest struct {
@@ -23,7 +22,7 @@ type MyRequest struct {
 }
 
 type MyResponse struct {
-	Recipes []getrecipe.Recipe `json:"recipes"`
+	Recipes []recipe.Recipe `json:"recipes"`
 }
 
 const (
@@ -38,18 +37,18 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 	// 1. Get the Recipe
 	// ---------------------------------------------------------------------- //
 
-	grResp, err := getrecipe.GetRecipe(ctx, request.URL)
+	grResp, err := mylambda.GetRecipe(ctx, request.URL)
 	if err != nil {
 		return myResponse, err
 	}
 	fmt.Println("GetRecipe Response", grResp)
-	dbRecipe := databaseops.Recipe{ID: grResp.Recipe.ID}
+	dbRecipe := mylambda.MyRecipe{ID: grResp.ID}
 
 	// ---------------------------------------------------------------------- //
 	// 2. Parse the Ingredients
 	// ---------------------------------------------------------------------- //
 
-	piResp, err := parseingredients.ParseIngredients(ctx, grResp.Recipe.Ingredients)
+	piResp, err := mylambda.ParseIngredients(ctx, grResp.Ingredients)
 	if err != nil {
 		return myResponse, err
 	}
@@ -58,7 +57,7 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 	// ---------------------------------------------------------------------- //
 	// 3. Add the Recipe to the DB if it isn't already there
 	// ---------------------------------------------------------------------- //
-	doResp, err := databaseops.DatabaseOperation(ctx, dbRecipe)
+	doResp, err := mylambda.DatabaseOperation(ctx, dbRecipe)
 	if err != nil {
 		return myResponse, err
 	}
@@ -70,16 +69,16 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 	// Loop through each ingredient and query ingredient db.
 
 	// List of ingredients that should be added to the db.
-	var ingredientsToAdd []databaseops.Ingredient
+	var ingredientsToAdd []mylambda.MyIngredient
 	// List of ingredients to update
-	var ingredientsToUpdate []databaseops.Ingredient
+	var ingredientsToUpdate []mylambda.MyIngredient
 	// List of all ingredients in DB form
-	var allIngredients []databaseops.Ingredient
+	var allIngredients []mylambda.MyIngredient
 
 	// To Do: Rework the logic here. Results are dependent on Ingredient Parsing
-	for _, pIngr := range piResp.Ingredients {
-		dIngr := databaseops.Ingredient{Name: pIngr.Name, RecipeIds: []int{grResp.Recipe.ID}}
-		doResp, err = databaseops.DatabaseOperation(ctx, dIngr)
+	for _, pIngr := range piResp {
+		dIngr := mylambda.MyIngredient{Name: pIngr.Name, RecipeIds: []int{grResp.ID}}
+		doResp, err = mylambda.DatabaseOperation(ctx, dIngr)
 		fmt.Println("DatabaseOperation Response", doResp)
 		// Move this logic to DB Driver
 		if err != nil || !doResp.Success {
@@ -110,7 +109,7 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 			}
 			for _, id := range item.RecipeIds {
 				// Exit if we've found a match
-				if id == grResp.Recipe.ID {
+				if id == grResp.ID {
 					found = true
 					break
 				}
@@ -125,8 +124,8 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 		allIngredients = append(allIngredients, dIngr)
 	}
 
-	databaseops.UpdateIngredientsTable(ctx, ingredientsToAdd, databaseops.PUT)
-	databaseops.UpdateIngredientsTable(ctx, ingredientsToUpdate, databaseops.UPDATE)
+	mylambda.UpdateIngredientsTable(ctx, ingredientsToAdd, mylambda.PUT)
+	mylambda.UpdateIngredientsTable(ctx, ingredientsToUpdate, mylambda.UPDATE)
 
 	// ---------------------------------------------------------------------- //
 	// 5. Determine which recipes share the most ingredients with original recipe

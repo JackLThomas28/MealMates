@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/JackLThomas28/MealMates/lambda/objects v0.0.0-20220320160108-ba7ddaa576b9
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.3.0 // indirect
 	github.com/aws/smithy-go v1.11.0 // indirect
