@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 
+	// Third Party
+	"github.com/JackLThomas28/MealMates/lambda/objects/recipe"
 	"github.com/aws/aws-lambda-go/lambda"
 
 	// Local packages
 	recipes "mealmates.com/lambda/RecipeScraper/recipes"
 	allrecipes "mealmates.com/lambda/RecipeScraper/recipes/allrecipes"
-	structs "mealmates.com/lambda/RecipeScraper/structs"
 )
 
 type MyEvent struct {
@@ -16,7 +17,7 @@ type MyEvent struct {
 }
 
 type MyResponse struct {
-	Recipe structs.StandardRecipe `json:"recipe"`
+	Recipe recipe.Recipe `json:"recipe"`
 }
 
 func HandleRequest(ctx context.Context, request MyEvent) (MyResponse, error) {
@@ -41,3 +42,5 @@ func main() {
 
 // BUILD COMMAND:
 // GOOS=linux go build main.go
+// zip main.zip main
+// aws lambda update-function-code --function-name getRecipe --zip-file fileb://./main.zip

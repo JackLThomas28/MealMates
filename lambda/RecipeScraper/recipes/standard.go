@@ -4,45 +4,48 @@ import (
 	// "encoding/json"
 	// "errors"
 
+	// Third Party
+	"github.com/JackLThomas28/MealMates/lambda/objects/recipe"
+
 	// Local Packages
 	structs "mealmates.com/lambda/RecipeScraper/structs"
 )
 
-func StandardizeRecipe(recipe structs.ARRecipe) (structs.StandardRecipe, error) {
+func StandardizeRecipe(rec structs.ARRecipe) (recipe.Recipe, error) {
 	// Build the recipe
-	var newRecipe structs.StandardRecipe
-	newRecipe.ID = recipe.ID
-	newRecipe.Name = recipe.Name
+	var newRecipe recipe.Recipe
+	newRecipe.ID = rec.ID
+	newRecipe.Name = rec.Name
 
-	var newImage structs.StandardImage
-	newImage.URL = recipe.Image.URL
-	newImage.Width = recipe.Image.Width
-	newImage.Height = recipe.Image.Height
+	var newImage recipe.Image
+	newImage.URL = rec.Image.URL
+	newImage.Width = rec.Image.Width
+	newImage.Height = rec.Image.Height
 
 	newRecipe.Image = newImage
-	newRecipe.Description = recipe.Description
-	newRecipe.PrepTime = recipe.PrepTime
-	newRecipe.CookTime = recipe.CookTime
-	newRecipe.TotalTime = recipe.TotalTime
-	newRecipe.RecipeYield = recipe.RecipeYield
-	for i := 0; i < len(recipe.RecipeIngredient); i++ {
-		newRecipe.Ingredients = append(newRecipe.Ingredients, recipe.RecipeIngredient[i])
+	newRecipe.Description = rec.Description
+	newRecipe.PrepTime = rec.PrepTime
+	newRecipe.CookTime = rec.CookTime
+	newRecipe.TotalTime = rec.TotalTime
+	newRecipe.RecipeYield = rec.RecipeYield
+	for i := 0; i < len(rec.RecipeIngredient); i++ {
+		newRecipe.Ingredients = append(newRecipe.Ingredients, rec.RecipeIngredient[i])
 	}
-	for i := 0; i < len(recipe.RecipeInstructions); i++ {
-		newRecipe.Instructions = append(newRecipe.Instructions, recipe.RecipeInstructions[i].Text)
+	for i := 0; i < len(rec.RecipeInstructions); i++ {
+		newRecipe.Instructions = append(newRecipe.Instructions, rec.RecipeInstructions[i].Text)
 	}
-	for i := 0; i < len(recipe.RecipeCategory); i++ {
-		newRecipe.Categories = append(newRecipe.Categories, recipe.RecipeCategory[i])
+	for i := 0; i < len(rec.RecipeCategory); i++ {
+		newRecipe.Categories = append(newRecipe.Categories, rec.RecipeCategory[i])
 	}
 
-	var newRating structs.StandardRating
-	newRating.RatingValue = recipe.AggregateRating.RatingValue
-	newRating.RatingCount = recipe.AggregateRating.RatingCount
+	var newRating recipe.Rating
+	newRating.RatingValue = rec.AggregateRating.RatingValue
+	newRating.RatingCount = rec.AggregateRating.RatingCount
 
 	newRecipe.Rating = newRating
 
-	var newNutrition structs.StandardNutrition
-	newNutrition.Calories = recipe.Nutrition.Calories
+	var newNutrition recipe.Nutrition
+	newNutrition.Calories = rec.Nutrition.Calories
 	newRecipe.Nutrition = newNutrition
 
 	return newRecipe, nil
