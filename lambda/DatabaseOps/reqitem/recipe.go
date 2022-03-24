@@ -5,54 +5,18 @@ import (
 	"strconv"
 
 	// Third Party
+	"github.com/JackLThomas28/MealMates/lambda/objects/ingredient"
+	"github.com/JackLThomas28/MealMates/lambda/objects/recipe"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-type Image struct {
-	URL    string `json:"url"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-}
-
-type Rating struct {
-	RatingValue float32 `json:"ratingValue"`
-	RatingCount int     `json:"ratingCount"`
-}
-
-type Nutrition struct {
-	Calories string `json:"calories"`
-}
-
-type ingredient struct {
-	Name   string  `json:"name"`
-	Amount float64 `json:"amount"`
-	Unit   string  `json:"unit"`
-	Raw    string  `json:"raw"`
-}
-
-type Recipe struct {
-	ID                int          `json:"id"`
-	Name              string       `json:"name"`
-	Image             Image        `json:"image"`
-	Description       string       `json:"description"`
-	PrepTime          string       `json:"prepTime"`
-	CookTime          string       `json:"cookTime"`
-	TotalTime         string       `json:"totalTime"`
-	RecipeYield       string       `json:"recipeYield"`
-	Ingredients       []string     `json:"ingredients"`
-	Instructions      []string     `json:"instructions"`
-	Categories        []string     `json:"categories"`
-	Rating            Rating       `json:"rating"`
-	Nutrition         Nutrition    `json:"nutrition"`
-	ParsedIngredients []ingredient `json:"parsedIngredients"`
-}
-
 const RECIPE_TABLE_NAME = "AllRecipes"
 
-func (r Recipe) BuildWriteRequest() (map[string][]types.WriteRequest, error) {
+type MyRecipe recipe.Recipe
+func (r MyRecipe) BuildWriteRequest() (map[string][]types.WriteRequest, error) {
 	recipeIngredients, err := attributevalue.MarshalList(r.Ingredients)
 	if err != nil {
 		return map[string][]types.WriteRequest{}, err
@@ -123,7 +87,7 @@ func (r Recipe) BuildWriteRequest() (map[string][]types.WriteRequest, error) {
 	}, nil
 }
 
-func (r Recipe) BuildDeleteItem() (dynamodb.DeleteItemInput, error) {
+func (r MyRecipe) BuildDeleteItem() (dynamodb.DeleteItemInput, error) {
 	return dynamodb.DeleteItemInput{
 		TableName: aws.String(RECIPE_TABLE_NAME),
 		Key: map[string]types.AttributeValue{
@@ -133,7 +97,7 @@ func (r Recipe) BuildDeleteItem() (dynamodb.DeleteItemInput, error) {
 }
 
 // Update the ID
-func (r Recipe) BuildUpdateItem() (dynamodb.UpdateItemInput, error) {
+func (r MyRecipe) BuildUpdateItem() (dynamodb.UpdateItemInput, error) {
 	return dynamodb.UpdateItemInput{
 		TableName: aws.String(RECIPE_TABLE_NAME),
 		Key: map[string]types.AttributeValue{
@@ -148,7 +112,7 @@ func (r Recipe) BuildUpdateItem() (dynamodb.UpdateItemInput, error) {
 }
 
 // Scan based on name
-func (r Recipe) BuildScanItem() (dynamodb.ScanInput, error) {
+func (r MyRecipe) BuildScanItem() (dynamodb.ScanInput, error) {
 	return dynamodb.ScanInput{
 		TableName:        aws.String(RECIPE_TABLE_NAME),
 		FilterExpression: aws.String("contains(#name, :name)"),
@@ -162,7 +126,7 @@ func (r Recipe) BuildScanItem() (dynamodb.ScanInput, error) {
 }
 
 // Get based on id (primary key)
-func (r Recipe) BuildGetItem() (dynamodb.GetItemInput, error) {
+func (r MyRecipe) BuildGetItem() (dynamodb.GetItemInput, error) {
 	return dynamodb.GetItemInput{
 		TableName: aws.String(RECIPE_TABLE_NAME),
 		Key: map[string]types.AttributeValue{
@@ -171,7 +135,7 @@ func (r Recipe) BuildGetItem() (dynamodb.GetItemInput, error) {
 	}, nil
 }
 
-func extractRecipe(r *Recipe, result map[string]types.AttributeValue) error {
+func extractRecipe(r *MyRecipe, result map[string]types.AttributeValue) error {
 	ingredients := result["ingredients"].(*types.AttributeValueMemberL)
 	err := attributevalue.UnmarshalList(ingredients.Value, &r.Ingredients)
 	if err != nil {
@@ -252,7 +216,7 @@ func extractRecipe(r *Recipe, result map[string]types.AttributeValue) error {
 	parsedIngredients := prsedIngrdnts.Value
 
 	for _, ingr := range parsedIngredients {
-		var curIngr ingredient
+		var curIngr ingredient.Ingredient
 		ingrMap := ingr.(*types.AttributeValueMemberM)
 
 		// Ingredient Name
@@ -293,16 +257,16 @@ func extractRecipe(r *Recipe, result map[string]types.AttributeValue) error {
 	return err
 }
 
-func (r *Recipe) ParseResult(result map[string]types.AttributeValue) error {
+func (r *MyRecipe) ParseResult(result map[string]types.AttributeValue) error {
 	err := extractRecipe(r, result)
 	return err
 }
 
-func (r Recipe) ParseScanResults(results []map[string]types.AttributeValue) ([]RequestItem, error) {
+func (r MyRecipe) ParseScanResults(results []map[string]types.AttributeValue) ([]RequestItem, error) {
 	var recipeList []RequestItem
 	var err error
 	for _, recipe := range results {
-		curRecipe := &Recipe{}
+		curRecipe := &MyRecipe{}
 		err = extractRecipe(curRecipe, recipe)
 		recipeList = append(recipeList, curRecipe)
 	}

@@ -13,8 +13,8 @@ import (
 )
 
 type MyEvent struct {
-	Recipe     reqitem.Recipe     `json:"recipe"`
-	Ingredient reqitem.Ingredient `json:"ingredient"`
+	Recipe     reqitem.MyRecipe     `json:"recipe"`
+	Ingredient reqitem.MyIngredientDB `json:"ingredient"`
 	Operation  string             `json:"operation"`
 	Table      string             `json:"table"`
 }

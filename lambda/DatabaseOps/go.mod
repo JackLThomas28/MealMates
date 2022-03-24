@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/JackLThomas28/MealMates/lambda/objects v0.0.0-20220324201926-92e3f460764f
 	github.com/aws/aws-sdk-go-v2/credentials v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.10.0 // indirect

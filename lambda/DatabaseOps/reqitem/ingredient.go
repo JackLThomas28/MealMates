@@ -6,25 +6,21 @@ import (
 	"strconv"
 
 	// Third Party
+	"github.com/JackLThomas28/MealMates/lambda/objects/ingredientdb"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-type Ingredient struct {
-	Name      string `json:"name"`
-	RecipeIDs []int  `json:"recipeIds"`
-	RecipeID  int    `json:"recipeId"`
-}
-
 const INGR_TABLE_NAME = "Ingredients"
 
-func (i Ingredient) BuildWriteRequest() (map[string][]types.WriteRequest, error) {
+type MyIngredientDB ingredientdb.IngredientDB
+func (i MyIngredientDB) BuildWriteRequest() (map[string][]types.WriteRequest, error) {
 	writeRequests := make(map[string][]types.WriteRequest)
 	writeRequests[INGR_TABLE_NAME] = make([]types.WriteRequest, 0)
 
-	ingrRecipeIDs, err := attributevalue.MarshalList(i.RecipeIDs)
+	ingrRecipeIDs, err := attributevalue.MarshalList(i.RecipeIds)
 	if err != nil {
 		return map[string][]types.WriteRequest{}, err
 	}
@@ -43,7 +39,7 @@ func (i Ingredient) BuildWriteRequest() (map[string][]types.WriteRequest, error)
 	}, nil
 }
 
-func (i Ingredient) BuildDeleteItem() (dynamodb.DeleteItemInput, error) {
+func (i MyIngredientDB) BuildDeleteItem() (dynamodb.DeleteItemInput, error) {
 	return dynamodb.DeleteItemInput{
 		TableName: aws.String(INGR_TABLE_NAME),
 		Key: map[string]types.AttributeValue{
@@ -53,8 +49,8 @@ func (i Ingredient) BuildDeleteItem() (dynamodb.DeleteItemInput, error) {
 }
 
 // Update the recipeIds list
-func (i Ingredient) BuildUpdateItem() (dynamodb.UpdateItemInput, error) {
-	ingrRecipeIDs, err := attributevalue.MarshalList(i.RecipeIDs)
+func (i MyIngredientDB) BuildUpdateItem() (dynamodb.UpdateItemInput, error) {
+	ingrRecipeIDs, err := attributevalue.MarshalList(i.RecipeIds)
 	if err != nil {
 		return dynamodb.UpdateItemInput{}, err
 	}
@@ -67,14 +63,14 @@ func (i Ingredient) BuildUpdateItem() (dynamodb.UpdateItemInput, error) {
 		UpdateExpression: aws.String("set recipeIds = list_append(recipeIds, :recipeIds)"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":recipeIds": &types.AttributeValueMemberL{Value: ingrRecipeIDs},
-			":recipeId": &types.AttributeValueMemberN{Value: strconv.Itoa(i.RecipeIDs[0])},
+			":recipeId": &types.AttributeValueMemberN{Value: strconv.Itoa(i.RecipeIds[0])},
 		},
 		ConditionExpression: aws.String("NOT contains(recipeIds, :recipeId)"),
 	}, nil
 }
 
 // Scan based on name
-func (i Ingredient) BuildScanItem() (dynamodb.ScanInput, error) {
+func (i MyIngredientDB) BuildScanItem() (dynamodb.ScanInput, error) {
 	return dynamodb.ScanInput{
 		TableName: aws.String(INGR_TABLE_NAME),
 		FilterExpression: aws.String("contains(#name, :name)"),
@@ -88,7 +84,7 @@ func (i Ingredient) BuildScanItem() (dynamodb.ScanInput, error) {
 }
 
 // Get based on name (primary key)
-func (i Ingredient) BuildGetItem() (dynamodb.GetItemInput, error) {
+func (i MyIngredientDB) BuildGetItem() (dynamodb.GetItemInput, error) {
 	return dynamodb.GetItemInput{
 		TableName: aws.String(INGR_TABLE_NAME),
 		Key: map[string]types.AttributeValue{
@@ -97,7 +93,7 @@ func (i Ingredient) BuildGetItem() (dynamodb.GetItemInput, error) {
 	}, nil
 }
 
-func extractIngredient(i *Ingredient, result map[string]types.AttributeValue) error {
+func extractIngredient(i *MyIngredientDB, result map[string]types.AttributeValue) error {
 	name := result["name"].(*types.AttributeValueMemberS)
 	err := attributevalue.Unmarshal(name, &i.Name)
 	if err != nil {
@@ -105,7 +101,7 @@ func extractIngredient(i *Ingredient, result map[string]types.AttributeValue) er
 	}
 
 	ids := result["recipeIds"].(*types.AttributeValueMemberL)
-	err = attributevalue.UnmarshalList(ids.Value, &i.RecipeIDs)
+	err = attributevalue.UnmarshalList(ids.Value, &i.RecipeIds)
 	if err != nil {
 		return err
 	}
@@ -113,7 +109,7 @@ func extractIngredient(i *Ingredient, result map[string]types.AttributeValue) er
 	return nil
 }
 
-func (i *Ingredient) ParseResult(result map[string]types.AttributeValue) error {
+func (i *MyIngredientDB) ParseResult(result map[string]types.AttributeValue) error {
 	if result == nil {
 		return errors.New("ingredient parseresult: could not locate ingredient")
 	}
@@ -121,14 +117,14 @@ func (i *Ingredient) ParseResult(result map[string]types.AttributeValue) error {
 	return err
 }
 
-func (i Ingredient) ParseScanResults(results []map[string]types.AttributeValue) ([]RequestItem, error) {
+func (i MyIngredientDB) ParseScanResults(results []map[string]types.AttributeValue) ([]RequestItem, error) {
 	var ingrList []RequestItem
 	var err error
 
 	fmt.Println(results)
 
 	for _, ingr := range results {
-		curIngr := &Ingredient{}
+		curIngr := &MyIngredientDB{}
 		err = extractIngredient(curIngr, ingr)
 		ingrList = append(ingrList, curIngr)
 	}

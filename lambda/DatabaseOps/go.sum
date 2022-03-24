@@ -1,4 +1,6 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/JackLThomas28/MealMates/lambda/objects v0.0.0-20220324201926-92e3f460764f h1:Qi7c//bnXeVqR5970fVP1GpG6beQrEUWzN6f9czuxiA=
+github.com/JackLThomas28/MealMates/lambda/objects v0.0.0-20220324201926-92e3f460764f/go.mod h1:LMIVT2SNJZNhTMYTzs8pHN6ihsrTRxrj1o0iJg4hKZE=
 github.com/aws/aws-lambda-go v1.28.0 h1:fZiik1PZqW2IyAN4rj+Y0UBaO1IDFlsNo9Zz/XnArK4=
 github.com/aws/aws-lambda-go v1.28.0/go.mod h1:jJmlefzPfGnckuHdXX7/80O3BvUUi12XOkbv4w9SGLU=
 github.com/aws/aws-sdk-go-v2 v1.13.0/go.mod h1:L6+ZpqHaLbAaxsqV0L4cvxZY7QupWJB4fhkf8LXvC7w=
