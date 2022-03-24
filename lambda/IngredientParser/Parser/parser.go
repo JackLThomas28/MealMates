@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	// Local Packages
+	"github.com/JackLThomas28/MealMates/lambda/objects/ingredient"
 	constants "mealmates.com/lambda/IngredientParser/constants"
-	structs "mealmates.com/lambda/IngredientParser/structs"
 )
 
 const RE_AMT_PATTERN = "[0-9¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.]+"
@@ -160,11 +160,11 @@ func determineName(rawIngredient string) (string, error) {
 	return name, nil
 }
 
-func ParseIngredients(ingredients []string) ([]structs.Ingredient, error) {
+func ParseIngredients(ingredients []string) ([]ingredient.Ingredient, error) {
 	// 1. Store ingredients in Ingredient objects
-	var ingredientList []structs.Ingredient
+	var ingredientList []ingredient.Ingredient
 	for i := 0; i < len(ingredients); i++ {
-		curIngr := structs.Ingredient{
+		curIngr := ingredient.Ingredient{
 			Raw: ingredients[i],
 		}
 		ingredientList = append(ingredientList, curIngr)
