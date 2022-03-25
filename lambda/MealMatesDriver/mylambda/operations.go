@@ -78,11 +78,9 @@ func DatabaseOperation(ctx context.Context, reqObj ReqItem) (Response, error) {
 	if reqObj.IsRecipe() {
 		recipe := reqObj.GetRecipe()
 		inPayload = buildRecipeRequest(GET, recipe)
-		fmt.Println("inPayload Recipe", inPayload)
 	} else if reqObj.IsIngredient() {
 		ingr := reqObj.GetIngredient()
 		inPayload = buildIngredientRequest(GET, ingr)
-		fmt.Println("inPayload", inPayload)
 	} else {
 		fmt.Println(file_name + FUNC_NAME, "invalid request object")
 		// Error path

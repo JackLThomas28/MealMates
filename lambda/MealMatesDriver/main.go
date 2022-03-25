@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 	"strconv"
 
 	// Third Party
-
 	"github.com/JackLThomas28/MealMates/lambda/objects/recipe"
 	"github.com/aws/aws-lambda-go/lambda"
 
@@ -79,7 +77,6 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 	for _, pIngr := range piResp {
 		dIngr := mylambda.MyIngredient{Name: pIngr.Name, RecipeIds: []int{grResp.ID}}
 		doResp, err = mylambda.DatabaseOperation(ctx, dIngr)
-		fmt.Println("DatabaseOperation Response", doResp)
 		// Move this logic to DB Driver
 		if err != nil || !doResp.Success {
 			// Try converting the payload to an Error Response Object
@@ -132,45 +129,50 @@ func HandleRequest(ctx context.Context, request MyRequest) (MyResponse, error) {
 	// ---------------------------------------------------------------------- //
 
 	fmt.Println(allIngredients)
-	recipeIdAmts := make(map[int]int)
-	for _, ingr := range allIngredients {
-		for _, id := range ingr.RecipeIds {
-			if recipeIdAmts[id] == 0 {
-				recipeIdAmts[id] = 1
-			} else {
-				recipeIdAmts[id] += 1
-			}
-		}
+	rf, err := mylambda.RunAlgorithm(ctx, allIngredients, 5)
+	if err != nil {
+		fmt.Println("Error in RunAlgorith", err)
 	}
+	fmt.Println("rfs:", rf)
+	// recipeIdAmts := make(map[int]int)
+	// for _, ingr := range allIngredients {
+	// 	for _, id := range ingr.RecipeIds {
+	// 		if recipeIdAmts[id] == 0 {
+	// 			recipeIdAmts[id] = 1
+	// 		} else {
+	// 			recipeIdAmts[id] += 1
+	// 		}
+	// 	}
+	// }
 
-	var recipesAndOccurrences []RecipeAndOccurrence
-	for key, val := range recipeIdAmts {
-		recipesAndOccurrences = append(recipesAndOccurrences, RecipeAndOccurrence{ID: key, Occurrences: val})
-	}
+	// var recipesAndOccurrences []RecipeAndOccurrence
+	// for key, val := range recipeIdAmts {
+	// 	recipesAndOccurrences = append(recipesAndOccurrences, RecipeAndOccurrence{ID: key, Occurrences: val})
+	// }
 
-	sort.Sort(byOccurrences(recipesAndOccurrences))
-	fmt.Println(recipesAndOccurrences)
+	// sort.Sort(byOccurrences(recipesAndOccurrences))
+	// fmt.Println(recipesAndOccurrences)
 	return myResponse, nil
 }
 
-type byOccurrences []RecipeAndOccurrence
+// type byOccurrences []RecipeAndOccurrence
 
-type RecipeAndOccurrence struct {
-	ID int
-	Occurrences int
-}
+// type RecipeAndOccurrence struct {
+// 	ID int
+// 	Occurrences int
+// }
 
-func (r byOccurrences) Len() int {
-	return len(r)
-}
+// func (r byOccurrences) Len() int {
+// 	return len(r)
+// }
 
-func (r byOccurrences) Swap(i, j int) {
-	r[i], r[j] = r[j], r[i]
-}
+// func (r byOccurrences) Swap(i, j int) {
+// 	r[i], r[j] = r[j], r[i]
+// }
 
-func (r byOccurrences) Less(i, j int) bool {
-	return r[i].Occurrences < r[j].Occurrences
-}
+// func (r byOccurrences) Less(i, j int) bool {
+// 	return r[i].Occurrences < r[j].Occurrences
+// }
 
 func main() {
 	lambda.Start(HandleRequest)

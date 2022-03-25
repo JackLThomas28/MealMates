@@ -8,11 +8,6 @@ import (
 	"github.com/JackLThomas28/MealMates/lambda/objects/recipe"
 )
 
-const (
-	FILE_NAME = "getrecipe"
-	LAMBDA_NAME = "getRecipe"
-)
-
 func GetRecipe(ctx context.Context, requestUrl string) (recipe.Recipe, error){
 	const (
 		FILE_NAME = "getrecipe"
@@ -21,8 +16,8 @@ func GetRecipe(ctx context.Context, requestUrl string) (recipe.Recipe, error){
 	)
 	
 	inPayload := []byte(
-		`{`                           +
-		`"url": "` + requestUrl + `"` +
+		`{`                               +
+			`"url": "` + requestUrl + `"` +
 		`}`)
 		
 	outPayload, err := InvokeLambda(ctx, LAMBDA_NAME, inPayload)
